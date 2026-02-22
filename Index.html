@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Stock Airbnb</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f0ea; --card: #fff; --text: #1a1208; --muted: #8a7e6e;
+    --accent: #e8572a; --green: #2ecc71; --border: #e4ddd3;
+    --shadow: 0 4px 24px rgba(26,18,8,.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  header {
+    background: var(--text); color: var(--bg); padding: 18px 20px;
+    display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100;
+  }
+  header h1 { font-family: 'DM Serif Display', serif; font-size: 1.4rem; letter-spacing: -.02em; flex: 1; }
+  .back-btn {
+    background: rgba(255,255,255,.15); border: none; color: var(--bg); padding: 6px 14px;
+    border-radius: 20px; font-family: 'DM Sans', sans-serif; font-size: .85rem; cursor: pointer;
+    display: none; align-items: center; gap: 6px; transition: background .2s;
+  }
+  .back-btn:hover { background: rgba(255,255,255,.25); }
+  .back-btn.visible { display: flex; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .nav-bar {
+    position: fixed; bottom: 0; left: 0; right: 0; background: var(--card);
+    border-top: 1px solid var(--border); display: flex; z-index: 200;
+    box-shadow: 0 -4px 20px rgba(26,18,8,.08);
+  }
+  .nav-btn {
+    flex: 1; padding: 12px 8px 14px; border: none; background: none; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    font-family: 'DM Sans', sans-serif; font-size: .72rem; font-weight: 500;
+    color: var(--muted); transition: color .15s;
+  }
+  .nav-btn .nav-icon { font-size: 1.3rem; line-height: 1; }
+  .nav-btn.active { color: var(--accent); }
+  #screen-home { padding: 24px 16px 100px; max-width: 500px; margin: 0 auto; }
+  .section-title { font-family: 'DM Serif Display', serif; font-size: 1.6rem; margin-bottom: 6px; }
+  .section-sub { color: var(--muted); font-size: .9rem; margin-bottom: 24px; }
+  .appart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .appart-card {
+    background: var(--card); border-radius: 16px; padding: 20px 16px; cursor: pointer;
+    border: 2px solid transparent; box-shadow: var(--shadow);
+    transition: transform .18s, box-shadow .18s; position: relative; overflow: hidden;
+  }
+  .appart-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background: var(--accent); transform: scaleX(0); transition: transform .18s;
+  }
+  .appart-card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(26,18,8,.14); }
+  .appart-card:hover::before { transform: scaleX(1); }
+  .appart-card:active { transform: scale(.97); }
+  .appart-icon { font-size: 2rem; margin-bottom: 10px; display: block; }
+  .appart-name { font-weight: 600; font-size: 1rem; }
+  .appart-count { font-size: .8rem; color: var(--muted); margin-top: 4px; }
+  .appart-alert { font-size: .75rem; color: var(--accent); font-weight: 500; margin-top: 4px; }
+  #screen-stock { max-width: 500px; margin: 0 auto; padding: 20px 16px 100px; }
+  .appart-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+  .appart-header-icon {
+    font-size: 2.4rem; width: 52px; height: 52px; background: var(--card);
+    border-radius: 14px; display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--shadow); flex-shrink: 0;
+  }
+  .appart-header-info h2 { font-family: 'DM Serif Display', serif; font-size: 1.5rem; }
+  .appart-header-info p { font-size: .85rem; color: var(--muted); }
+  .stock-list { display: flex; flex-direction: column; gap: 10px; }
+  .stock-item {
+    background: var(--card); border-radius: 14px; padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow);
+  }
+  .stock-item-name { flex: 1; font-weight: 500; font-size: .95rem; }
+  .stock-controls { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .qty-btn {
+    width: 36px; height: 36px; border-radius: 50%; border: none; font-size: 1.2rem;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-weight: 600; transition: transform .1s; line-height: 1;
+  }
+  .qty-btn:active { transform: scale(.9); }
+  .btn-minus { background: #fde8e0; color: var(--accent); }
+  .btn-plus  { background: #e0f5eb; color: #1a9e50; }
+  .qty-value { min-width: 32px; text-align: center; font-size: 1.1rem; font-weight: 700; transition: transform .15s; }
+  .qty-value.zero { color: var(--muted); }
+  .qty-value.low  { color: var(--accent); }
+  .stock-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot-ok   { background: var(--green); }
+  .dot-low  { background: #e88c2a; }
+  .dot-zero { background: #ddd; }
+  #screen-total { max-width: 500px; margin: 0 auto; padding: 20px 16px 100px; }
+  #screen-settings { max-width: 500px; margin: 0 auto; padding: 20px 16px 100px; }
+  .screen-header { margin-bottom: 20px; }
+  .screen-header h2 { font-family: 'DM Serif Display', serif; font-size: 1.5rem; }
+  .screen-header p { font-size: .85rem; color: var(--muted); margin-top: 2px; }
+  .total-list { display: flex; flex-direction: column; gap: 10px; }
+  .total-item {
+    background: var(--card); border-radius: 14px; padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow);
+  }
+  .total-item-name { flex: 1; font-weight: 500; font-size: .95rem; }
+  .total-qty { font-size: 1.2rem; font-weight: 700; min-width: 36px; text-align: right; }
+  .total-qty.zero { color: var(--muted); }
+  .total-detail { font-size: .72rem; color: var(--muted); text-align: right; }
+  .settings-section { margin-bottom: 28px; }
+  .settings-section-title {
+    font-size: .75rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--muted); margin-bottom: 10px; padding-left: 4px;
+  }
+  .settings-list { display: flex; flex-direction: column; gap: 8px; }
+  .settings-item {
+    background: var(--card); border-radius: 12px; padding: 12px 14px;
+    display: flex; align-items: center; gap: 10px; box-shadow: var(--shadow);
+  }
+  .settings-item-emoji { font-size: 1.5rem; cursor: pointer; flex-shrink: 0; user-select: none; }
+  .settings-item-emoji:hover { transform: scale(1.2); display: inline-block; }
+  .settings-item-input {
+    flex: 1; border: none; background: none; font-family: 'DM Sans', sans-serif;
+    font-size: .95rem; font-weight: 500; color: var(--text); outline: none; min-width: 0;
+    border-bottom: 2px solid transparent; transition: border-color .2s;
+  }
+  .settings-item-input:focus { border-bottom-color: var(--accent); }
+  .settings-delete-btn {
+    width: 28px; height: 28px; border-radius: 50%; border: none; background: #fde8e0;
+    color: var(--accent); cursor: pointer; font-size: 1.1rem; display: flex;
+    align-items: center; justify-content: center; flex-shrink: 0; transition: transform .1s;
+  }
+  .settings-delete-btn:active { transform: scale(.9); }
+  .add-btn {
+    width: 100%; padding: 13px; border-radius: 12px; border: 2px dashed var(--border);
+    background: none; font-family: 'DM Sans', sans-serif; font-size: .9rem;
+    color: var(--muted); cursor: pointer; transition: border-color .2s, color .2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px;
+  }
+  .add-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .save-btn {
+    width: 100%; padding: 14px; border-radius: 14px; border: none; background: var(--text);
+    color: var(--bg); font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 600;
+    cursor: pointer; margin-top: 8px; transition: opacity .2s;
+  }
+  .save-btn:hover { opacity: .85; }
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 500;
+    display: none; align-items: flex-end; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .emoji-picker {
+    background: var(--card); border-radius: 20px 20px 0 0;
+    padding: 20px 16px 40px; width: 100%; max-width: 500px;
+  }
+  .emoji-picker h3 { font-family: 'DM Serif Display', serif; font-size: 1.1rem; margin-bottom: 14px; }
+  .emoji-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .emoji-opt {
+    width: 44px; height: 44px; border-radius: 10px; border: 2px solid transparent;
+    background: var(--bg); font-size: 1.4rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: border-color .15s;
+  }
+  .emoji-opt:hover { border-color: var(--accent); }
+  .toast {
+    position: fixed; bottom: 70px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--text); color: var(--bg); padding: 10px 20px;
+    border-radius: 24px; font-size: .85rem; font-weight: 500;
+    transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+    z-index: 999; pointer-events: none; white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .io-btn {
+    display: flex; align-items: center; gap: 14px; padding: 14px 16px;
+    border-radius: 14px; border: none; cursor: pointer; width: 100%;
+    font-family: 'DM Sans', sans-serif; font-size: .95rem; text-align: left;
+    box-shadow: var(--shadow); transition: transform .15s, opacity .15s;
+  }
+  .io-btn:active { transform: scale(.98); opacity: .85; }
+  .export-btn { background: var(--text); color: var(--bg); }
+  .import-btn { background: var(--card); color: var(--text); }
+  @media (max-width: 360px) { .appart-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header>
+  <button class="back-btn" id="back-btn" onclick="showHome()">← Retour</button>
+  <h1 id="header-title">🏠 Mes Appartements</h1>
+</header>
+
+<div class="screen active" id="screen-home">
+  <p class="section-title">Gestion de stock</p>
+  <p class="section-sub">Sélectionne un appartement</p>
+  <div class="appart-grid" id="appart-grid"></div>
+</div>
+
+<div class="screen" id="screen-stock">
+  <div class="appart-header">
+    <div class="appart-header-icon" id="stock-icon"></div>
+    <div class="appart-header-info">
+      <h2 id="stock-title"></h2>
+      <p id="stock-sub"></p>
+    </div>
+  </div>
+  <div class="stock-list" id="stock-list"></div>
+</div>
+
+<div class="screen" id="screen-total">
+  <div class="screen-header">
+    <h2>🛒 Total courses</h2>
+    <p id="total-sub"></p>
+  </div>
+  <div class="total-list" id="total-list"></div>
+</div>
+
+<div class="screen" id="screen-settings">
+  <div class="settings-section">
+    <p class="settings-section-title">Appartements</p>
+    <div class="settings-list" id="settings-apparts"></div>
+    <button class="add-btn" onclick="addAppart()">+ Ajouter un appartement</button>
+  </div>
+  <div class="settings-section">
+    <p class="settings-section-title">Produits</p>
+    <div class="settings-list" id="settings-produits"></div>
+    <button class="add-btn" onclick="addProduit()">+ Ajouter un produit</button>
+  </div>
+  <button class="save-btn" onclick="saveSettings()">✅ Enregistrer les modifications</button>
+
+  <div class="settings-section" style="margin-top:28px;">
+    <p class="settings-section-title">Synchronisation entre appareils</p>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <button class="io-btn export-btn" onclick="exportData()">
+        <span style="font-size:1.3rem;">📤</span>
+        <div>
+          <div style="font-weight:600;">Exporter mes données</div>
+          <div style="font-size:.78rem; opacity:.7; margin-top:2px;">Télécharge un fichier .json avec tout ton stock</div>
+        </div>
+      </button>
+      <label class="io-btn import-btn" for="import-input">
+        <span style="font-size:1.3rem;">📥</span>
+        <div>
+          <div style="font-weight:600;">Importer des données</div>
+          <div style="font-size:.78rem; opacity:.7; margin-top:2px;">Charge un fichier .json exporté depuis un autre appareil</div>
+        </div>
+      </label>
+      <input type="file" id="import-input" accept=".json" style="display:none;" onchange="importData(event)">
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="emoji-modal" onclick="closeEmojiPicker(event)">
+  <div class="emoji-picker">
+    <h3>Choisir une icône</h3>
+    <div class="emoji-grid" id="emoji-grid"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<nav class="nav-bar">
+  <button class="nav-btn active" id="nav-home" onclick="showHome()">
+    <span class="nav-icon">🏠</span><span>Apparts</span>
+  </button>
+  <button class="nav-btn" id="nav-total" onclick="showTotal()">
+    <span class="nav-icon">🛒</span><span>Courses</span>
+  </button>
+  <button class="nav-btn" id="nav-settings" onclick="showSettings()">
+    <span class="nav-icon">⚙️</span><span>Réglages</span>
+  </button>
+</nav>
+
+<script>
+const KEY_STOCK    = 'airbnb_stock_v2';
+const KEY_APPARTS  = 'airbnb_apparts_v2';
+const KEY_PRODUITS = 'airbnb_produits_v2';
+const LOW = 2;
+
+const DEFAULT_APPARTS = [
+  { id:'A', name:'Appart A', emoji:'🏡' },
+  { id:'B', name:'Appart B', emoji:'🛖' },
+  { id:'C', name:'Appart C', emoji:'🏢' },
+  { id:'D', name:'Appart D', emoji:'🏠' },
+  { id:'E', name:'Appart E', emoji:'🏗️' },
+];
+const DEFAULT_PRODUITS = [
+  'PQ','Sopalin','Gel douche','Shampoing','Savon mains',
+  'Éponges','Liquide vaisselle','Sacs poubelles grands',
+  'Sacs poubelles petits','Produit vitres','Anti calcaire',
+  'Javel','Café','Thé',"Huile d'olive"
+];
+const EMOJIS = ['🏠','🏡','🏢','🏣','🏤','🏥','🏦','🏨','🏩','🏪','🏫','🏬','🏭','🏯','🏰','🛖','🗼','🗽','⛪','🕌','🕍','🛕','⛩️','🏗️','🏘️','🌆','🌇','🌃','🌉','🌁','🌄','🗺️','🔑','🪙','💎','⭐','🌟','🎯','🎪','🎨'];
+
+function load(key, def) {
+  try { const r = localStorage.getItem(key); if (r) return JSON.parse(r); } catch(e) {}
+  return JSON.parse(JSON.stringify(typeof def==='function'?def():def));
+}
+function save(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+
+let apparts  = load(KEY_APPARTS,  DEFAULT_APPARTS);
+let produits = load(KEY_PRODUITS, DEFAULT_PRODUITS);
+let stock    = load(KEY_STOCK,    {});
+
+// Sync stock structure
+(function syncStock() {
+  for (const ap of apparts) {
+    if (!stock[ap.id]) stock[ap.id] = {};
+    for (const p of produits)
+      if (stock[ap.id][p] === undefined) stock[ap.id][p] = 0;
+  }
+  save(KEY_STOCK, stock);
+})();
+
+let currentAppart = null;
+let editApparts = [], editProduits = [], emojiTarget = null;
+
+function setNav(active) {
+  ['home','total','settings'].forEach(id =>
+    document.getElementById('nav-'+id).classList.toggle('active', id===active));
+}
+
+function hideAll() {
+  ['home','stock','total','settings'].forEach(id =>
+    document.getElementById('screen-'+id).classList.remove('active'));
+  document.getElementById('back-btn').classList.remove('visible');
+}
+
+function showHome() {
+  hideAll();
+  document.getElementById('screen-home').classList.add('active');
+  document.getElementById('header-title').textContent = '🏠 Mes Appartements';
+  currentAppart = null; setNav('home'); renderHome();
+}
+function showTotal() {
+  hideAll();
+  document.getElementById('screen-total').classList.add('active');
+  document.getElementById('header-title').textContent = '🛒 Total courses';
+  setNav('total'); renderTotal();
+}
+function showSettings() {
+  hideAll();
+  document.getElementById('screen-settings').classList.add('active');
+  document.getElementById('header-title').textContent = '⚙️ Réglages';
+  setNav('settings'); renderSettings();
+}
+function showStock(appartId) {
+  const ap = apparts.find(a => a.id===appartId); if (!ap) return;
+  hideAll(); currentAppart = appartId;
+  document.getElementById('screen-stock').classList.add('active');
+  document.getElementById('back-btn').classList.add('visible');
+  document.getElementById('header-title').textContent = ap.name;
+  document.getElementById('stock-icon').textContent = ap.emoji;
+  document.getElementById('stock-title').textContent = ap.name;
+  setNav('home'); renderStock(appartId);
+}
+
+function renderHome() {
+  const grid = document.getElementById('appart-grid');
+  grid.innerHTML = '';
+  for (const ap of apparts) {
+    const s = stock[ap.id]||{};
+    const total = Object.values(s).reduce((a,v)=>a+v,0);
+    const low   = Object.values(s).filter(v=>v>0&&v<=LOW).length;
+    const zero  = Object.values(s).filter(v=>v===0).length;
+    const card  = document.createElement('div');
+    card.className = 'appart-card';
+    card.innerHTML = `
+      <span class="appart-icon">${ap.emoji}</span>
+      <div class="appart-name">${ap.name}</div>
+      <div class="appart-count">${produits.length} produits · total ${total}</div>
+      ${zero>0?`<div class="appart-alert">⚠️ ${zero} en rupture</div>`:''}
+      ${low>0?`<div class="appart-alert" style="color:#e88c2a">⚡ ${low} stock bas</div>`:''}`;
+    card.onclick = () => showStock(ap.id);
+    grid.appendChild(card);
+  }
+}
+
+function safeid(s) { return s.replace(/[^a-z0-9]/gi,'_'); }
+
+function renderStock(appartId) {
+  const s = stock[appartId]||{};
+  const list = document.getElementById('stock-list');
+  list.innerHTML = '';
+  for (const p of produits) {
+    const qty = s[p]??0;
+    const dc = qty===0?'dot-zero':qty<=LOW?'dot-low':'dot-ok';
+    const qc = qty===0?'zero':qty<=LOW?'low':'';
+    const el = document.createElement('div');
+    el.className = 'stock-item';
+    const ps = p.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    el.innerHTML = `
+      <span class="stock-dot ${dc}" id="dot-${safeid(p)}"></span>
+      <span class="stock-item-name">${p}</span>
+      <div class="stock-controls">
+        <button class="qty-btn btn-minus" onclick="updateQty('${appartId}','${ps}',-1)">−</button>
+        <span class="qty-value ${qc}" id="qty-${safeid(p)}">${qty}</span>
+        <button class="qty-btn btn-plus"  onclick="updateQty('${appartId}','${ps}',+1)">+</button>
+      </div>`;
+    list.appendChild(el);
+  }
+  updateSubtitle(appartId);
+}
+
+function updateSubtitle(appartId) {
+  const s = stock[appartId]||{};
+  const total = Object.values(s).reduce((a,v)=>a+v,0);
+  const zero  = Object.values(s).filter(v=>v===0).length;
+  document.getElementById('stock-sub').textContent =
+    `${produits.length} produits · total ${total}${zero>0?` · ⚠️ ${zero} en rupture`:''}`;
+}
+
+function updateQty(appartId, produit, delta) {
+  if (!stock[appartId]) stock[appartId]={};
+  const cur  = stock[appartId][produit]??0;
+  const next = Math.max(0,cur+delta);
+  if (next===cur) { if (delta<0) showToast('Déjà à 0 !'); return; }
+  stock[appartId][produit] = next;
+  save(KEY_STOCK, stock);
+  const qEl = document.getElementById(`qty-${safeid(produit)}`);
+  const dEl = document.getElementById(`dot-${safeid(produit)}`);
+  if (qEl) {
+    qEl.textContent = next;
+    qEl.className = 'qty-value '+(next===0?'zero':next<=LOW?'low':'');
+    qEl.style.transform = 'scale(1.4)';
+    setTimeout(()=>qEl.style.transform='',150);
+  }
+  if (dEl) dEl.className = 'stock-dot '+(next===0?'dot-zero':next<=LOW?'dot-low':'dot-ok');
+  updateSubtitle(appartId);
+}
+
+function renderTotal() {
+  const list = document.getElementById('total-list');
+  list.innerHTML = '';
+  let grandTotal = 0;
+  for (const p of produits) {
+    let total = 0; const details = [];
+    for (const ap of apparts) {
+      const qty = (stock[ap.id]||{})[p]||0;
+      total += qty;
+      if (qty>0) details.push(`${ap.name}: ${qty}`);
+    }
+    grandTotal += total;
+    const dc = total===0?'dot-zero':total<=(LOW*apparts.length)?'dot-low':'dot-ok';
+    const qc = total===0?'zero':total<=(LOW*apparts.length)?'low':'';
+    const el = document.createElement('div');
+    el.className = 'total-item';
+    el.innerHTML = `
+      <span class="stock-dot ${dc}"></span>
+      <span class="total-item-name">${p}</span>
+      <span class="total-detail">${details.join(' · ')||'—'}</span>
+      <span class="total-qty ${qc}">${total}</span>`;
+    list.appendChild(el);
+  }
+  document.getElementById('total-sub').textContent =
+    `${produits.length} produits · ${grandTotal} unités au total`;
+}
+
+function renderSettings() {
+  editApparts  = apparts.map(a=>({...a}));
+  editProduits = [...produits];
+
+  const al = document.getElementById('settings-apparts');
+  al.innerHTML = '';
+  editApparts.forEach((ap,i) => {
+    const el = document.createElement('div');
+    el.className = 'settings-item'; el.id = `edit-ap-${i}`;
+    el.innerHTML = `
+      <span class="settings-item-emoji" onclick="openEmojiPicker(${i})" title="Changer l'icône">${ap.emoji}</span>
+      <input class="settings-item-input" value="${ap.name.replace(/"/g,'&quot;')}"
+             oninput="editApparts[${i}].name=this.value" placeholder="Nom de l'appartement">
+      <button class="settings-delete-btn" onclick="removeAppart(${i})">×</button>`;
+    al.appendChild(el);
+  });
+
+  const pl = document.getElementById('settings-produits');
+  pl.innerHTML = '';
+  editProduits.forEach((p,i) => {
+    const el = document.createElement('div');
+    el.className = 'settings-item'; el.id = `edit-pr-${i}`;
+    el.innerHTML = `
+      <input class="settings-item-input" value="${p.replace(/"/g,'&quot;')}"
+             oninput="editProduits[${i}]=this.value" placeholder="Nom du produit" style="margin-left:4px;">
+      <button class="settings-delete-btn" onclick="removeProduit(${i})">×</button>`;
+    pl.appendChild(el);
+  });
+}
+
+function addAppart() {
+  editApparts.push({ id:'AP_'+Date.now(), name:'Nouvel appartement', emoji:'🏠' });
+  renderSettings();
+  setTimeout(()=>{
+    const inputs = document.querySelectorAll('#settings-apparts .settings-item-input');
+    if (inputs.length) inputs[inputs.length-1].focus();
+  },50);
+}
+function removeAppart(i) {
+  if (editApparts.length<=1) { showToast('Il faut au moins 1 appartement'); return; }
+  if (confirm(`Supprimer "${editApparts[i].name}" ? Le stock sera perdu.`)) {
+    editApparts.splice(i,1); renderSettings();
+  }
+}
+function addProduit() {
+  editProduits.push('Nouveau produit');
+  renderSettings();
+  setTimeout(()=>{
+    const inputs = document.querySelectorAll('#settings-produits .settings-item-input');
+    if (inputs.length) inputs[inputs.length-1].focus();
+  },50);
+}
+function removeProduit(i) {
+  if (editProduits.length<=1) { showToast('Il faut au moins 1 produit'); return; }
+  if (confirm(`Supprimer "${editProduits[i]}" ? Les quantités seront perdues.`)) {
+    editProduits.splice(i,1); renderSettings();
+  }
+}
+
+function saveSettings() {
+  if (editApparts.some(a=>!a.name.trim()))  { showToast("Un appartement n'a pas de nom"); return; }
+  if (editProduits.some(p=>!p.trim()))      { showToast("Un produit n'a pas de nom"); return; }
+
+  const removedApparts  = apparts.filter(a=>!editApparts.find(ea=>ea.id===a.id)).map(a=>a.id);
+  const removedProduits = produits.filter(p=>!editProduits.includes(p));
+
+  for (const id of removedApparts) delete stock[id];
+  for (const ap of editApparts) {
+    if (!stock[ap.id]) stock[ap.id]={};
+    for (const rp of removedProduits) delete stock[ap.id][rp];
+    for (const p of editProduits) if (stock[ap.id][p]===undefined) stock[ap.id][p]=0;
+  }
+
+  apparts  = editApparts.map(a=>({...a, name:a.name.trim()}));
+  produits = editProduits.map(p=>p.trim());
+
+  save(KEY_APPARTS,  apparts);
+  save(KEY_PRODUITS, produits);
+  save(KEY_STOCK,    stock);
+
+  showToast('✅ Modifications enregistrées !');
+  setTimeout(()=>showHome(), 900);
+}
+
+function openEmojiPicker(idx) {
+  emojiTarget = idx;
+  const grid = document.getElementById('emoji-grid');
+  grid.innerHTML = '';
+  for (const e of EMOJIS) {
+    const btn = document.createElement('button');
+    btn.className='emoji-opt'; btn.textContent=e;
+    btn.onclick=()=>pickEmoji(e);
+    grid.appendChild(btn);
+  }
+  document.getElementById('emoji-modal').classList.add('open');
+}
+function pickEmoji(emoji) {
+  if (emojiTarget!==null) {
+    editApparts[emojiTarget].emoji = emoji;
+    const el = document.querySelector(`#edit-ap-${emojiTarget} .settings-item-emoji`);
+    if (el) el.textContent = emoji;
+  }
+  document.getElementById('emoji-modal').classList.remove('open');
+  emojiTarget = null;
+}
+function closeEmojiPicker(e) {
+  if (e.target===document.getElementById('emoji-modal')) {
+    document.getElementById('emoji-modal').classList.remove('open');
+    emojiTarget = null;
+  }
+}
+
+function exportData() {
+  const data = {
+    version: 2,
+    exportedAt: new Date().toISOString(),
+    apparts,
+    produits,
+    stock
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  const date = new Date().toLocaleDateString('fr-FR').replace(/\//g,'-');
+  a.download = `stock-airbnb-${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('📤 Export téléchargé !');
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.apparts || !data.produits || !data.stock) {
+        showToast('❌ Fichier invalide'); return;
+      }
+      if (!confirm(`Importer les données du ${new Date(data.exportedAt).toLocaleString('fr-FR')} ?\n\nTes données actuelles seront remplacées.`)) return;
+
+      apparts  = data.apparts;
+      produits = data.produits;
+      stock    = data.stock;
+
+      save(KEY_APPARTS,  apparts);
+      save(KEY_PRODUITS, produits);
+      save(KEY_STOCK,    stock);
+
+      showToast('📥 Données importées !');
+      setTimeout(() => showHome(), 900);
+    } catch(err) {
+      showToast('❌ Fichier illisible');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = ''; // reset input
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+renderHome();
+</script>
+</body>
+</html>
