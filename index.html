@@ -702,8 +702,6 @@ function renderRepartition() {
 }
 
 function marquerLivre(appartId) {
-  livres[appartId] = true;
-  save(KEY_LIVRES, livres);
   // Effacer les besoins et achats pour cet appart
   const b = besoins[appartId]||{};
   for (const p of produits) {
@@ -711,8 +709,11 @@ function marquerLivre(appartId) {
     delete achetes[p+':'+appartId];
   }
   besoins[appartId] = b;
+  // Supprimer le flag livré (pas besoin de le garder, les données sont effacées)
+  delete livres[appartId];
   save(KEY_BESOINS, besoins);
   save(KEY_ACHETES, achetes);
+  save(KEY_LIVRES, livres);
   showToast('✅ Livraison enregistrée !');
   renderRepartition(); updateBadges();
 }
