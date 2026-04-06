@@ -805,23 +805,6 @@ function livrerTout() {
   updateBadges();
 }
 
-function marquerLivre(appartId) {
-  // Effacer les besoins et achats pour cet appart
-  const b = besoins[appartId]||{};
-  for (const p of produits) {
-    b[p] = 0;
-    delete achetes[p+':'+appartId];
-  }
-  besoins[appartId] = b;
-  // Supprimer le flag livré (pas besoin de le garder, les données sont effacées)
-  delete livres[appartId];
-  save(KEY_BESOINS, besoins);
-  save(KEY_ACHETES, achetes);
-  save(KEY_LIVRES, livres);
-  showToast('✅ Livraison enregistrée !');
-  renderRepartition(); updateBadges();
-}
-
 // ── SETTINGS ──────────────────────────────────────────────────────────────────
 function showSettings() {
   hideAll();
