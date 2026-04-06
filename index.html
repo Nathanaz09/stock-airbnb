@@ -180,6 +180,13 @@
     border-bottom: 2px solid transparent; transition: border-color .2s;
   }
   .settings-item-input:focus { border-bottom-color: var(--accent); }
+  .drag-handle {
+    font-size: 1.1rem; color: var(--border); cursor: grab; flex-shrink: 0;
+    padding: 0 4px; user-select: none;
+  }
+  .drag-handle:active { cursor: grabbing; }
+  .settings-item.dragging { opacity: .4; }
+  .settings-item.drag-over { border: 2px solid var(--accent); background: #fef6f3; }
   .settings-delete-btn {
     width: 28px; height: 28px; border-radius: 50%; border: none; background: #fde8e0;
     color: var(--accent); cursor: pointer; font-size: 1.1rem; display: flex;
@@ -434,6 +441,7 @@ function updateBadges() {
 
 // ── HOME ──────────────────────────────────────────────────────────────────────
 function showHome() {
+  editApparts = []; editProduits = [];
   hideAll();
   document.getElementById('screen-home').classList.add('active');
   document.getElementById('header-title').textContent = '🏠 Mes Appartements';
@@ -550,6 +558,7 @@ function getCoursesItems() {
 }
 
 function showCourses() {
+  editApparts = []; editProduits = [];
   hideAll();
   document.getElementById('screen-courses').classList.add('active');
   document.getElementById('header-title').textContent = '🛒 Mes courses';
@@ -634,6 +643,7 @@ function resetCourses() {
 
 // ── RÉPARTITION ───────────────────────────────────────────────────────────────
 function showRepartition() {
+  editApparts = []; editProduits = [];
   hideAll();
   document.getElementById('screen-repartition').classList.add('active');
   document.getElementById('header-title').textContent = '📦 Répartition';
@@ -727,50 +737,176 @@ function showSettings() {
 }
 
 function renderSettings() {
-  editApparts  = apparts.map(a=>({...a}));
-  editProduits = [...produits];
+  if (editApparts.length === 0) editApparts = apparts.map(a=>({...a}));
+  if (editProduits.length === 0) editProduits = [...produits];
+  renderAppartsList();
+  renderProduitsList();
+}
+
+function renderAppartsList() {
   const al = document.getElementById('settings-apparts');
   al.innerHTML = '';
-  editApparts.forEach((ap,i) => {
+  editApparts.forEach((ap, i) => {
     const el = document.createElement('div');
-    el.className = 'settings-item'; el.id=`edit-ap-${i}`;
-    el.innerHTML = `
-      <span class="settings-item-emoji" onclick="openEmojiPicker(${i})">${ap.emoji}</span>
-      <input class="settings-item-input" value="${ap.name.replace(/"/g,'&quot;')}"
-             oninput="editApparts[${i}].name=this.value" placeholder="Nom de l'appartement">
-      <button class="settings-delete-btn" onclick="removeAppart(${i})">×</button>`;
+    el.className = 'settings-item';
+    el.id = `edit-ap-${i}`;
+    el.draggable = true;
+    el.dataset.type = 'appart';
+    el.dataset.index = i;
+    const emoji = document.createElement('span');
+    emoji.className = 'settings-item-emoji';
+    emoji.textContent = ap.emoji;
+    emoji.onclick = () => openEmojiPicker(i);
+    const input = document.createElement('input');
+    input.className = 'settings-item-input';
+    input.value = ap.name;
+    input.placeholder = "Nom de l'appartement";
+    input.oninput = () => { editApparts[i].name = input.value; };
+    const delBtn = document.createElement('button');
+    delBtn.className = 'settings-delete-btn';
+    delBtn.textContent = '×';
+    delBtn.onclick = () => removeAppart(i);
+    const handle = document.createElement('span');
+    handle.className = 'drag-handle';
+    handle.textContent = '⠿';
+    el.appendChild(handle);
+    el.appendChild(emoji);
+    el.appendChild(input);
+    el.appendChild(delBtn);
+    addDragEvents(el, 'appart');
     al.appendChild(el);
   });
+}
+
+function renderProduitsList() {
   const pl = document.getElementById('settings-produits');
   pl.innerHTML = '';
-  editProduits.forEach((p,i) => {
+  editProduits.forEach((p, i) => {
     const el = document.createElement('div');
-    el.className='settings-item'; el.id=`edit-pr-${i}`;
-    el.innerHTML = `
-      <input class="settings-item-input" value="${p.replace(/"/g,'&quot;')}"
-             oninput="editProduits[${i}]=this.value" placeholder="Nom du produit" style="margin-left:4px;">
-      <button class="settings-delete-btn" onclick="removeProduit(${i})">×</button>`;
+    el.className = 'settings-item';
+    el.id = `edit-pr-${i}`;
+    el.draggable = true;
+    el.dataset.type = 'produit';
+    el.dataset.index = i;
+    const handle = document.createElement('span');
+    handle.className = 'drag-handle';
+    handle.textContent = '⠿';
+    const input = document.createElement('input');
+    input.className = 'settings-item-input';
+    input.value = p;
+    input.placeholder = 'Nom du produit';
+    input.oninput = () => { editProduits[i] = input.value; };
+    const delBtn = document.createElement('button');
+    delBtn.className = 'settings-delete-btn';
+    delBtn.textContent = '×';
+    delBtn.onclick = () => removeProduit(i);
+    el.appendChild(handle);
+    el.appendChild(input);
+    el.appendChild(delBtn);
+    addDragEvents(el, 'produit');
     pl.appendChild(el);
   });
 }
 
 function addAppart() {
-  editApparts.push({ id:'AP_'+Date.now(), name:'Nouvel appartement', emoji:'🏠' });
-  renderSettings();
-  setTimeout(()=>{ const i=document.querySelectorAll('#settings-apparts .settings-item-input'); if(i.length) i[i.length-1].focus(); },50);
+  editApparts.push({ id:'AP_'+Date.now(), name:'', emoji:'🏠' });
+  renderAppartsList();
+  setTimeout(()=>{
+    const idx = editApparts.length - 1;
+    const el = document.querySelector(`#edit-ap-${idx} .settings-item-input`);
+    if (el) { el.focus(); }
+  }, 80);
 }
 function removeAppart(i) {
-  if (editApparts.length<=1) { showToast('Il faut au moins 1 appartement'); return; }
-  if (confirm(`Supprimer "${editApparts[i].name}" ?`)) { editApparts.splice(i,1); renderSettings(); }
+  if (editApparts.length <= 1) { showToast('Il faut au moins 1 appartement'); return; }
+  editApparts.splice(i, 1);
+  renderAppartsList();
 }
 function addProduit() {
-  editProduits.push('Nouveau produit');
-  renderSettings();
-  setTimeout(()=>{ const i=document.querySelectorAll('#settings-produits .settings-item-input'); if(i.length) i[i.length-1].focus(); },50);
+  editProduits.push('');
+  renderProduitsList();
+  setTimeout(()=>{
+    const idx = editProduits.length - 1;
+    const el = document.querySelector(`#edit-pr-${idx} .settings-item-input`);
+    if (el) { el.focus(); }
+  }, 80);
 }
 function removeProduit(i) {
-  if (editProduits.length<=1) { showToast('Il faut au moins 1 produit'); return; }
-  if (confirm(`Supprimer "${editProduits[i]}" ?`)) { editProduits.splice(i,1); renderSettings(); }
+  if (editProduits.length <= 1) { showToast('Il faut au moins 1 produit'); return; }
+  editProduits.splice(i, 1);
+  renderProduitsList();
+}
+
+// ── DRAG & DROP ───────────────────────────────────────────────────────────────
+let dragSrc = null;
+
+function addDragEvents(el, type) {
+  // Desktop drag
+  el.addEventListener('dragstart', e => {
+    dragSrc = el;
+    setTimeout(() => el.classList.add('dragging'), 0);
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  el.addEventListener('dragend', () => {
+    el.classList.remove('dragging');
+    document.querySelectorAll('.settings-item').forEach(i => i.classList.remove('drag-over'));
+    dragSrc = null;
+  });
+  el.addEventListener('dragover', e => {
+    e.preventDefault();
+    if (dragSrc && dragSrc !== el && dragSrc.dataset.type === type) {
+      document.querySelectorAll('.settings-item').forEach(i => i.classList.remove('drag-over'));
+      el.classList.add('drag-over');
+    }
+  });
+  el.addEventListener('drop', e => {
+    e.preventDefault();
+    if (!dragSrc || dragSrc === el || dragSrc.dataset.type !== type) return;
+    const from = parseInt(dragSrc.dataset.index);
+    const to   = parseInt(el.dataset.index);
+    if (type === 'appart') {
+      const [item] = editApparts.splice(from, 1);
+      editApparts.splice(to, 0, item);
+      renderAppartsList();
+    } else {
+      const [item] = editProduits.splice(from, 1);
+      editProduits.splice(to, 0, item);
+      renderProduitsList();
+    }
+  });
+
+  // Mobile touch drag
+  let touchStartY = 0;
+  el.addEventListener('touchstart', e => {
+    touchStartY = e.touches[0].clientY;
+    el.classList.add('dragging');
+  }, { passive: true });
+  el.addEventListener('touchmove', e => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const target = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.settings-item');
+    document.querySelectorAll('.settings-item').forEach(i => i.classList.remove('drag-over'));
+    if (target && target !== el && target.dataset.type === type) target.classList.add('drag-over');
+  }, { passive: false });
+  el.addEventListener('touchend', e => {
+    el.classList.remove('dragging');
+    const touch = e.changedTouches[0];
+    const target = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.settings-item');
+    document.querySelectorAll('.settings-item').forEach(i => i.classList.remove('drag-over'));
+    if (target && target !== el && target.dataset.type === type) {
+      const from = parseInt(el.dataset.index);
+      const to   = parseInt(target.dataset.index);
+      if (type === 'appart') {
+        const [item] = editApparts.splice(from, 1);
+        editApparts.splice(to, 0, item);
+        renderAppartsList();
+      } else {
+        const [item] = editProduits.splice(from, 1);
+        editProduits.splice(to, 0, item);
+        renderProduitsList();
+      }
+    }
+  });
 }
 
 function saveSettings() {
