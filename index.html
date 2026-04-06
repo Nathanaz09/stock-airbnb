@@ -300,6 +300,21 @@
   </div>
 </div>
 
+<!-- REPARTITION DETAIL -->
+<div class="screen" id="screen-rep-detail">
+  <div class="page-wrap">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+      <div id="rep-detail-icon" style="font-size:2.4rem;width:52px;height:52px;background:var(--card);border-radius:14px;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);flex-shrink:0;"></div>
+      <div>
+        <div id="rep-detail-title" style="font-family:'DM Serif Display',serif;font-size:1.4rem;"></div>
+        <div id="rep-detail-sub" style="font-size:.85rem;color:var(--muted);margin-top:2px;"></div>
+      </div>
+    </div>
+    <div class="card-list" id="rep-detail-list"></div>
+    <button class="livrer-btn" id="rep-detail-tout-btn" onclick="livrerTout()" style="margin-top:16px;">✅ Tout marquer comme livré</button>
+  </div>
+</div>
+
 <!-- SETTINGS -->
 <div class="screen" id="screen-settings">
   <div class="page-wrap">
@@ -414,7 +429,7 @@ function setNav(active) {
 }
 
 function hideAll() {
-  ['home','besoin','courses','repartition','settings'].forEach(id =>
+  ['home','besoin','courses','repartition','rep-detail','settings'].forEach(id =>
     document.getElementById('screen-'+id).classList.remove('active'));
   document.getElementById('back-btn').classList.remove('visible');
 }
@@ -426,13 +441,11 @@ function updateBadges() {
   bc.textContent = toShop;
   bc.classList.toggle('visible', toShop > 0);
 
-  // Répartition badge = nb apparts avec articles achetés non livrés
+  // Répartition badge = nb apparts avec articles achetés non encore tous livrés
   const toDeliver = apparts.filter(ap => {
-    if (livres[ap.id]) return false;
-    return produits.some(p => {
-      const qty = besoins[ap.id]?.[p] || 0;
-      return qty > 0 && achetes[p+':'+ap.id]?.done;
-    });
+    const lines = produits.filter(p => achetes[p+':'+ap.id]?.done);
+    if (lines.length === 0) return false;
+    return lines.some(p => !livres[p+':'+ap.id]);
   }).length;
   const br = document.getElementById('badge-repartition');
   br.textContent = toDeliver;
@@ -642,58 +655,66 @@ function resetCourses() {
 }
 
 // ── RÉPARTITION ───────────────────────────────────────────────────────────────
+let currentRepAppart = null;
+
 function showRepartition() {
   editApparts = []; editProduits = [];
+  currentRepAppart = null;
   hideAll();
   document.getElementById('screen-repartition').classList.add('active');
   document.getElementById('header-title').textContent = '📦 Répartition';
+  document.getElementById('back-btn').classList.remove('visible');
   setNav('repartition'); renderRepartition(); updateBadges();
 }
+
+function showRepDetail(appartId) {
+  currentRepAppart = appartId;
+  const ap = apparts.find(a => a.id === appartId);
+  hideAll();
+  document.getElementById('screen-rep-detail').classList.add('active');
+  document.getElementById('back-btn').classList.add('visible');
+  document.getElementById('header-title').textContent = ap.name;
+  document.getElementById('rep-detail-icon').textContent = ap.emoji;
+  document.getElementById('rep-detail-title').textContent = ap.name;
+  setNav('repartition');
+  renderRepDetail(appartId);
+}
+
+// Override back button for rep-detail
+const origShowHome = null;
+document.getElementById('back-btn').onclick = function() {
+  if (currentRepAppart) { currentRepAppart = null; showRepartition(); }
+  else showHome();
+};
 
 function renderRepartition() {
   const list = document.getElementById('repartition-list');
   list.innerHTML = '';
-
   let hasAnything = false;
 
   for (const ap of apparts) {
-    // Produits achetés pour cet appart
-    const lines = [];
-    for (const p of produits) {
-      const key = p+':'+ap.id;
-      if (achetes[key]?.done) {
-        lines.push({ name: p, qty: achetes[key].qty });
-      }
-    }
+    const lines = produits.filter(p => achetes[p+':'+ap.id]?.done);
     if (lines.length === 0) continue;
     hasAnything = true;
+    const livresCount = lines.filter(p => livres[p+':'+ap.id]).length;
+    const allDone = livresCount === lines.length;
 
-    const isLivre = livres[ap.id];
     const block = document.createElement('div');
     block.className = 'repartition-appart';
-    block.id = 'rep-'+ap.id;
-
-    let rowsHtml = lines.map(l=>`
-      <div class="repartition-row">
-        <span class="repartition-row-name">${l.name}</span>
-        <span class="repartition-row-qty">× ${l.qty}</span>
-      </div>`).join('');
-
+    block.style.cursor = 'pointer';
     block.innerHTML = `
       <div class="repartition-header">
         <span style="font-size:1.8rem;">${ap.emoji}</span>
         <div class="repartition-header-info">
           <div class="repartition-header-name">${ap.name}</div>
-          <div class="repartition-header-count">${lines.length} produit${lines.length>1?'s':''} à apporter</div>
+          <div class="repartition-header-count">${livresCount}/${lines.length} produit${lines.length>1?'s':''} livré${livresCount>1?'s':''}</div>
         </div>
-        ${isLivre ? '<span style="color:var(--green);font-size:1.3rem;">✓</span>' : ''}
-      </div>
-      <div class="repartition-body">
-        ${rowsHtml}
-        <button class="livrer-btn${isLivre?' done':''}" onclick="marquerLivre('${ap.id}')" ${isLivre?'disabled':''}>
-          ${isLivre ? '✓ Livré' : '✅ Marquer comme livré'}
-        </button>
+        <span style="color:var(--muted);font-size:1.2rem;">›</span>
       </div>`;
+    if (allDone) {
+      block.querySelector('.repartition-header').style.opacity = '.5';
+    }
+    block.onclick = () => showRepDetail(ap.id);
     list.appendChild(block);
   }
 
@@ -704,11 +725,84 @@ function renderRepartition() {
     </div>`;
     document.getElementById('repartition-sub').textContent = '';
   } else {
-    const livresCount = apparts.filter(ap=>livres[ap.id]).length;
-    const totalApparts = apparts.filter(ap=>produits.some(p=>achetes[p+':'+ap.id]?.done)).length;
+    const totalApparts = apparts.filter(ap => produits.some(p => achetes[p+':'+ap.id]?.done)).length;
+    const livresApparts = apparts.filter(ap => {
+      const lines = produits.filter(p => achetes[p+':'+ap.id]?.done);
+      return lines.length > 0 && lines.every(p => livres[p+':'+ap.id]);
+    }).length;
     document.getElementById('repartition-sub').textContent =
-      `${livresCount}/${totalApparts} appartement${totalApparts>1?'s':''} livrés`;
+      `${livresApparts}/${totalApparts} appartement${totalApparts>1?'s':''} livrés`;
   }
+}
+
+function renderRepDetail(appartId) {
+  const ap = apparts.find(a => a.id === appartId);
+  const lines = produits.filter(p => achetes[p+':'+appartId]?.done);
+  const livresCount = lines.filter(p => livres[p+':'+appartId]).length;
+  const list = document.getElementById('rep-detail-list');
+  list.innerHTML = '';
+
+  document.getElementById('rep-detail-sub').textContent =
+    `${livresCount}/${lines.length} produit${lines.length>1?'s':''} livré${livresCount>1?'s':''}`;
+
+  for (const p of lines) {
+    const key = p+':'+appartId;
+    const isDone = !!livres[key];
+    const qty = achetes[key]?.qty || 0;
+    const el = document.createElement('div');
+    el.className = 'course-item' + (isDone ? ' done' : '');
+    el.id = 'rep-row-' + safeid(p);
+    el.innerHTML = `
+      <button class="course-check" onclick="toggleLivreProduit('${appartId}','${p.replace(/'/g,"\'")}')">
+        ${isDone ? '✓' : ''}
+      </button>
+      <div class="course-info">
+        <div class="course-name">${p}</div>
+      </div>
+      <span class="course-qty">× ${qty}</span>`;
+    list.appendChild(el);
+  }
+
+  // Bouton "tout livrer"
+  const allDone = lines.every(p => livres[p+':'+appartId]);
+  const btn = document.getElementById('rep-detail-tout-btn');
+  btn.textContent = allDone ? '✓ Tout livré' : '✅ Tout marquer comme livré';
+  btn.disabled = allDone;
+  btn.className = 'livrer-btn' + (allDone ? ' done' : '');
+}
+
+function toggleLivreProduit(appartId, produit) {
+  const key = produit+':'+appartId;
+  if (livres[key]) {
+    delete livres[key];
+  } else {
+    livres[key] = true;
+    // Effacer besoin et achat pour ce produit/appart
+    if (besoins[appartId]) besoins[appartId][produit] = 0;
+    delete achetes[key];
+  }
+  save(KEY_LIVRES, livres);
+  save(KEY_BESOINS, besoins);
+  save(KEY_ACHETES, achetes);
+  renderRepDetail(appartId);
+  updateBadges();
+}
+
+function livrerTout() {
+  if (!currentRepAppart) return;
+  const lines = produits.filter(p => achetes[p+':'+currentRepAppart]?.done);
+  for (const p of lines) {
+    const key = p+':'+currentRepAppart;
+    livres[key] = true;
+    if (besoins[currentRepAppart]) besoins[currentRepAppart][p] = 0;
+    delete achetes[key];
+  }
+  save(KEY_LIVRES, livres);
+  save(KEY_BESOINS, besoins);
+  save(KEY_ACHETES, achetes);
+  showToast('✅ Tout livré !');
+  renderRepDetail(currentRepAppart);
+  updateBadges();
 }
 
 function marquerLivre(appartId) {
