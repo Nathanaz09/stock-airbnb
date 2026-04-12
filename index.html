@@ -75,6 +75,7 @@
   .appart-icon { font-size: 2rem; margin-bottom: 10px; display: block; }
   .appart-name { font-weight: 600; font-size: 1rem; }
   .appart-count { font-size: .8rem; color: var(--muted); margin-top: 4px; }
+  .appart-ts { font-size: .72rem; color: var(--muted); margin-top: 5px; opacity: .8; }
   .appart-need { font-size: .78rem; color: var(--accent); font-weight: 600; margin-top: 4px; }
 
   /* BESOIN ROW */
@@ -272,6 +273,7 @@
       <div>
         <div id="besoin-title" style="font-family:'DM Serif Display',serif;font-size:1.4rem;"></div>
         <div id="besoin-sub" style="font-size:.85rem;color:var(--muted);margin-top:2px;"></div>
+        <div id="besoin-ts" style="font-size:.75rem;color:var(--muted);margin-top:2px;opacity:.8;"></div>
       </div>
     </div>
     <div class="card-list" id="besoin-list"></div>
@@ -308,6 +310,7 @@
       <div>
         <div id="rep-detail-title" style="font-family:'DM Serif Display',serif;font-size:1.4rem;"></div>
         <div id="rep-detail-sub" style="font-size:.85rem;color:var(--muted);margin-top:2px;"></div>
+        <div id="rep-detail-ts" style="font-size:.75rem;color:var(--muted);margin-top:2px;opacity:.8;"></div>
       </div>
     </div>
     <div class="card-list" id="rep-detail-list"></div>
@@ -379,7 +382,8 @@ const KEY_APPARTS  = 'airbnb_apparts_v3';
 const KEY_PRODUITS = 'airbnb_produits_v3';
 const KEY_BESOINS  = 'airbnb_besoins_v3';   // { appartId: { produit: qty } }
 const KEY_ACHETES  = 'airbnb_achetes_v3';   // { produit: { done: bool, qty: int } }
-const KEY_LIVRES   = 'airbnb_livres_v3';    // { appartId: bool }
+const KEY_LIVRES      = 'airbnb_livres_v3';
+const KEY_TIMESTAMPS  = 'airbnb_timestamps_v3'; // { appartId: ISO string }    // { appartId: bool }
 
 const DEFAULT_APPARTS = [
   { id:'A', name:'Appart A', emoji:'🏡' },
@@ -406,7 +410,8 @@ let apparts  = load(KEY_APPARTS,  DEFAULT_APPARTS);
 let produits = load(KEY_PRODUITS, DEFAULT_PRODUITS);
 let besoins  = load(KEY_BESOINS,  {});
 let achetes  = load(KEY_ACHETES,  {});
-let livres   = load(KEY_LIVRES,   {});
+let livres      = load(KEY_LIVRES,      {});
+let timestamps  = load(KEY_TIMESTAMPS,  {});
 
 // Sync besoins structure
 function syncBesoins() {
@@ -461,6 +466,21 @@ function showHome() {
   currentAppart = null; setNav('home'); renderHome(); updateBadges();
 }
 
+function formatTimestamp(iso) {
+  if (!iso) return 'Jamais modifié';
+  const d = new Date(iso);
+  const now = new Date();
+  const diffMs = now - d;
+  const diffMin = Math.floor(diffMs / 60000);
+  const diffH   = Math.floor(diffMs / 3600000);
+  const diffD   = Math.floor(diffMs / 86400000);
+  if (diffMin < 1)  return 'À l\'instant';
+  if (diffMin < 60) return `Il y a ${diffMin} min`;
+  if (diffH < 24)   return `Il y a ${diffH}h`;
+  if (diffD === 1)  return 'Hier ' + d.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+  return d.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'}) + ' à ' + d.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+}
+
 function renderHome() {
   const grid = document.getElementById('appart-grid');
   grid.innerHTML = '';
@@ -476,7 +496,8 @@ function renderHome() {
       <div class="appart-count">${produits.length} produits</div>
       ${nbProd > 0
         ? `<div class="appart-need">🛒 ${nbProd} produit${nbProd>1?'s':''} · ${total} unité${total>1?'s':''}</div>`
-        : `<div class="appart-count" style="color:var(--green)">✓ Rien à acheter</div>`}`;
+        : `<div class="appart-count" style="color:var(--green)">✓ Rien à acheter</div>`}
+      <div class="appart-ts">🕐 ${formatTimestamp(timestamps[ap.id])}</div>`;
     card.onclick = () => showBesoin(ap.id);
     grid.appendChild(card);
   }
@@ -491,6 +512,7 @@ function showBesoin(appartId) {
   document.getElementById('header-title').textContent = ap.name;
   document.getElementById('besoin-icon').textContent = ap.emoji;
   document.getElementById('besoin-title').textContent = ap.name;
+  document.getElementById('besoin-ts').textContent = '🕐 ' + formatTimestamp(timestamps[appartId]);
   setNav('home'); renderBesoin(appartId);
 }
 
@@ -527,7 +549,12 @@ function updateBesoin(appartId, produit, delta) {
   const next = Math.max(0, cur+delta);
   if (next===cur) { if (delta<0) showToast('Déjà à 0 !'); return; }
   besoins[appartId][produit] = next;
+  timestamps[appartId] = new Date().toISOString();
+  save(KEY_TIMESTAMPS, timestamps);
   save(KEY_BESOINS, besoins);
+  // Update timestamp display in real time
+  const tsEl = document.getElementById('besoin-ts');
+  if (tsEl) tsEl.textContent = '🕐 ' + formatTimestamp(timestamps[appartId]);
   // Reset achat state for this item if qty changed
   const key = produit+':'+appartId;
   if (achetes[key]) { delete achetes[key]; save(KEY_ACHETES, achetes); }
@@ -676,6 +703,7 @@ function showRepDetail(appartId) {
   document.getElementById('header-title').textContent = ap.name;
   document.getElementById('rep-detail-icon').textContent = ap.emoji;
   document.getElementById('rep-detail-title').textContent = ap.name;
+  document.getElementById('rep-detail-ts').textContent = '🕐 ' + formatTimestamp(timestamps[appartId]);
   setNav('repartition');
   renderRepDetail(appartId);
 }
@@ -708,6 +736,7 @@ function renderRepartition() {
         <div class="repartition-header-info">
           <div class="repartition-header-name">${ap.name}</div>
           <div class="repartition-header-count">${livresCount}/${lines.length} produit${lines.length>1?'s':''} livré${livresCount>1?'s':''}</div>
+          <div class="repartition-header-count">🕐 ${formatTimestamp(timestamps[ap.id])}</div>
         </div>
         <span style="color:var(--muted);font-size:1.2rem;">›</span>
       </div>`;
@@ -781,6 +810,8 @@ function toggleLivreProduit(appartId, produit) {
     if (besoins[appartId]) besoins[appartId][produit] = 0;
     delete achetes[key];
   }
+  timestamps[appartId] = new Date().toISOString();
+  save(KEY_TIMESTAMPS, timestamps);
   save(KEY_LIVRES, livres);
   save(KEY_BESOINS, besoins);
   save(KEY_ACHETES, achetes);
