@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Courses Airbnb</title>
+<title>Restock BnB</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -22,9 +22,8 @@
   .back-btn {
     background: rgba(255,255,255,.15); border: none; color: var(--bg); padding: 6px 14px;
     border-radius: 20px; font-family: 'DM Sans', sans-serif; font-size: .85rem; cursor: pointer;
-    display: none; align-items: center; gap: 6px; transition: background .2s;
+    display: none; align-items: center; gap: 6px;
   }
-  .back-btn:hover { background: rgba(255,255,255,.25); }
   .back-btn.visible { display: flex; }
 
   .screen { display: none; }
@@ -39,7 +38,7 @@
   .nav-btn {
     flex: 1; padding: 10px 4px 14px; border: none; background: none; cursor: pointer;
     display: flex; flex-direction: column; align-items: center; gap: 3px;
-    font-family: 'DM Sans', sans-serif; font-size: .68rem; font-weight: 500;
+    font-family: 'DM Sans', sans-serif; font-size: .65rem; font-weight: 500;
     color: var(--muted); transition: color .15s; position: relative;
   }
   .nav-btn .nav-icon { font-size: 1.25rem; line-height: 1; }
@@ -58,8 +57,8 @@
   .page-sub { font-size: .85rem; color: var(--muted); margin-bottom: 20px; }
   .card-list { display: flex; flex-direction: column; gap: 10px; }
 
-  /* APPARTS GRID */
-  .appart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+  /* APPART GRID */
+  .appart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }
   .appart-card {
     background: var(--card); border-radius: 16px; padding: 18px 14px; cursor: pointer;
     box-shadow: var(--shadow); transition: transform .18s, box-shadow .18s;
@@ -74,94 +73,84 @@
   .appart-card:active { transform: scale(.97); }
   .appart-icon { font-size: 2rem; margin-bottom: 10px; display: block; }
   .appart-name { font-weight: 600; font-size: 1rem; }
-  .appart-count { font-size: .8rem; color: var(--muted); margin-top: 4px; }
-  .appart-ts { font-size: .72rem; color: var(--muted); margin-top: 5px; opacity: .8; }
+  .appart-meta { font-size: .78rem; color: var(--muted); margin-top: 4px; }
   .appart-need { font-size: .78rem; color: var(--accent); font-weight: 600; margin-top: 4px; }
+  .appart-ok   { font-size: .78rem; color: var(--green); margin-top: 4px; }
+  .appart-ts   { font-size: .7rem; color: var(--muted); margin-top: 5px; opacity: .8; }
 
-  /* BESOIN ROW */
-  .need-item {
+  /* QTY ROW */
+  .qty-row {
     background: var(--card); border-radius: 14px; padding: 13px 16px;
     display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow);
   }
-  .need-item-name { flex: 1; font-weight: 500; font-size: .95rem; }
-  .need-controls { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .qty-row-name { flex: 1; font-weight: 500; font-size: .95rem; }
+  .qty-row-sub  { font-size: .75rem; color: var(--muted); margin-top: 2px; }
+  .qty-controls { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
   .qty-btn {
     width: 36px; height: 36px; border-radius: 50%; border: none; font-size: 1.2rem;
     cursor: pointer; display: flex; align-items: center; justify-content: center;
-    font-weight: 700; transition: transform .1s; line-height: 1; flex-shrink: 0;
+    font-weight: 700; transition: transform .1s; line-height: 1;
   }
   .qty-btn:active { transform: scale(.88); }
+  .btn-reset {
+    width: 28px; height: 28px; border-radius: 50%; border: none; font-size: .8rem;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    background: #f0ebe4; color: var(--muted); transition: transform .1s, background .15s; flex-shrink: 0;
+  }
+  .btn-reset:active { transform: scale(.88); }
+  .btn-reset.active { background: #fde8e0; color: var(--accent); }
   .btn-minus { background: #fde8e0; color: var(--accent); }
   .btn-plus  { background: #e0f5eb; color: var(--green); }
-  .qty-value { min-width: 28px; text-align: center; font-size: 1.1rem; font-weight: 700; transition: transform .15s; }
-  .qty-value.zero { color: #ccc; }
-  .qty-value.has  { color: var(--accent); }
+  .qty-val { min-width: 28px; text-align: center; font-size: 1.1rem; font-weight: 700; transition: transform .15s; }
+  .qty-val.zero { color: #ccc; }
+  .qty-val.has  { color: var(--accent); }
+  .qty-val.good { color: var(--green); }
 
-  /* COURSES LIST */
-  .course-item {
+  /* DETAIL HEADER */
+  .detail-header {
+    display: flex; align-items: center; gap: 14px; margin-bottom: 20px;
+  }
+  .detail-icon {
+    font-size: 2.4rem; width: 52px; height: 52px; background: var(--card);
+    border-radius: 14px; display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--shadow); flex-shrink: 0;
+  }
+  .detail-info h2 { font-family: 'DM Serif Display', serif; font-size: 1.4rem; }
+  .detail-info p  { font-size: .85rem; color: var(--muted); margin-top: 2px; }
+  .detail-info .ts { font-size: .75rem; color: var(--muted); margin-top: 2px; opacity: .8; }
+
+  /* À ACHETER */
+  .acheter-section-title {
+    font-size: .75rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--muted); margin: 20px 0 10px; padding-left: 2px;
+  }
+  .acheter-item {
     background: var(--card); border-radius: 14px; padding: 14px 16px;
-    display: flex; align-items: center; gap: 14px; box-shadow: var(--shadow);
-    transition: opacity .2s;
+    display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow);
   }
-  .course-item.done { opacity: .45; }
-  .course-check {
-    width: 26px; height: 26px; border-radius: 50%; border: 2.5px solid var(--border);
-    background: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; transition: background .15s, border-color .15s; font-size: .9rem;
+  .acheter-item-name { flex: 1; font-weight: 500; font-size: .95rem; }
+  .acheter-item-detail { font-size: .75rem; color: var(--muted); margin-top: 2px; }
+  .acheter-badge {
+    font-size: 1rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; flex-shrink: 0;
   }
-  .course-item.done .course-check { background: var(--green); border-color: var(--green); }
-  .course-info { flex: 1; }
-  .course-name { font-weight: 500; font-size: .95rem; }
-  .course-detail { font-size: .75rem; color: var(--muted); margin-top: 2px; }
-  .course-qty {
-    font-size: 1.1rem; font-weight: 700; color: var(--accent);
-    background: #fde8e0; padding: 4px 10px; border-radius: 20px; flex-shrink: 0;
-  }
-  .course-item.done .course-qty { color: var(--green); background: #e0f5eb; }
+  .badge-buy  { background: #fde8e0; color: var(--accent); }
+  .badge-ok   { background: #e0f5eb; color: var(--green); }
 
-  .courses-actions { display: flex; gap: 10px; margin-bottom: 16px; }
-  .action-btn {
-    flex: 1; padding: 11px; border-radius: 12px; border: none; cursor: pointer;
-    font-family: 'DM Sans', sans-serif; font-size: .85rem; font-weight: 600;
-    transition: opacity .2s;
+  .tab-switcher {
+    display: flex; gap: 8px; margin-bottom: 16px;
   }
-  .action-btn:active { opacity: .75; }
-  .btn-dark { background: var(--text); color: var(--bg); }
-  .btn-light { background: var(--card); color: var(--text); box-shadow: var(--shadow); }
+  .tab-btn {
+    flex: 1; padding: 9px; border-radius: 10px; border: none; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-size: .85rem; font-weight: 500;
+    background: var(--card); color: var(--muted); box-shadow: var(--shadow);
+    transition: background .15s, color .15s;
+  }
+  .tab-btn.active { background: var(--text); color: var(--bg); }
 
   .empty-state {
     text-align: center; padding: 48px 20px; color: var(--muted);
   }
   .empty-state .empty-icon { font-size: 3rem; margin-bottom: 12px; }
-  .empty-state p { font-size: .95rem; }
-
-  /* RÉPARTITION */
-  .repartition-appart {
-    background: var(--card); border-radius: 16px; overflow: hidden;
-    box-shadow: var(--shadow); margin-bottom: 12px;
-  }
-  .repartition-header {
-    padding: 14px 16px; display: flex; align-items: center; gap: 12px;
-    border-bottom: 1px solid var(--border); cursor: pointer;
-  }
-  .repartition-header-info { flex: 1; }
-  .repartition-header-name { font-weight: 600; font-size: 1rem; }
-  .repartition-header-count { font-size: .78rem; color: var(--muted); margin-top: 2px; }
-  .repartition-body { padding: 10px 16px 14px; display: flex; flex-direction: column; gap: 8px; }
-  .repartition-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
-  .repartition-row-name { flex: 1; font-size: .92rem; }
-  .repartition-row-qty {
-    font-weight: 700; font-size: .95rem; color: var(--accent);
-    background: #fde8e0; padding: 3px 10px; border-radius: 16px;
-  }
-  .livrer-btn {
-    width: 100%; margin-top: 12px; padding: 11px; border-radius: 12px; border: none;
-    background: var(--green); color: #fff; font-family: 'DM Sans', sans-serif;
-    font-size: .9rem; font-weight: 600; cursor: pointer; transition: opacity .2s;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-  }
-  .livrer-btn:active { opacity: .8; }
-  .livrer-btn.done { background: #ccc; cursor: default; }
 
   /* SETTINGS */
   .settings-section { margin-bottom: 28px; }
@@ -174,6 +163,7 @@
     background: var(--card); border-radius: 12px; padding: 12px 14px;
     display: flex; align-items: center; gap: 10px; box-shadow: var(--shadow);
   }
+  .drag-handle { font-size: 1.1rem; color: var(--border); cursor: grab; flex-shrink: 0; padding: 0 2px; user-select: none; }
   .settings-item-emoji { font-size: 1.5rem; cursor: pointer; flex-shrink: 0; }
   .settings-item-input {
     flex: 1; border: none; background: none; font-family: 'DM Sans', sans-serif;
@@ -181,38 +171,31 @@
     border-bottom: 2px solid transparent; transition: border-color .2s;
   }
   .settings-item-input:focus { border-bottom-color: var(--accent); }
-  .drag-handle {
-    font-size: 1.1rem; color: var(--border); cursor: grab; flex-shrink: 0;
-    padding: 0 4px; user-select: none;
-  }
-  .drag-handle:active { cursor: grabbing; }
-  .settings-item.dragging { opacity: .4; }
-  .settings-item.drag-over { border: 2px solid var(--accent); background: #fef6f3; }
   .settings-delete-btn {
     width: 28px; height: 28px; border-radius: 50%; border: none; background: #fde8e0;
     color: var(--accent); cursor: pointer; font-size: 1.1rem; display: flex;
     align-items: center; justify-content: center; flex-shrink: 0;
   }
+  .settings-item.dragging { opacity: .4; }
+  .settings-item.drag-over { border: 2px solid var(--accent); background: #fef6f3; }
   .add-btn {
     width: 100%; padding: 13px; border-radius: 12px; border: 2px dashed var(--border);
     background: none; font-family: 'DM Sans', sans-serif; font-size: .9rem;
-    color: var(--muted); cursor: pointer; transition: border-color .2s, color .2s;
-    display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px;
+    color: var(--muted); cursor: pointer; display: flex; align-items: center;
+    justify-content: center; gap: 8px; margin-top: 8px;
   }
   .add-btn:hover { border-color: var(--accent); color: var(--accent); }
   .save-btn {
     width: 100%; padding: 14px; border-radius: 14px; border: none; background: var(--text);
     color: var(--bg); font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 600;
-    cursor: pointer; margin-top: 8px; transition: opacity .2s;
+    cursor: pointer; margin-top: 8px;
   }
-  .save-btn:hover { opacity: .85; }
   .io-btn {
     display: flex; align-items: center; gap: 14px; padding: 14px 16px;
     border-radius: 14px; border: none; cursor: pointer; width: 100%;
     font-family: 'DM Sans', sans-serif; font-size: .95rem; text-align: left;
-    box-shadow: var(--shadow); transition: transform .15s, opacity .15s; margin-bottom: 10px;
+    box-shadow: var(--shadow); margin-bottom: 10px;
   }
-  .io-btn:active { transform: scale(.98); opacity: .85; }
   .export-btn { background: var(--text); color: var(--bg); }
   .import-btn { background: var(--card); color: var(--text); }
 
@@ -231,7 +214,7 @@
   .emoji-opt {
     width: 44px; height: 44px; border-radius: 10px; border: 2px solid transparent;
     background: var(--bg); font-size: 1.4rem; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; transition: border-color .15s;
+    display: flex; align-items: center; justify-content: center;
   }
   .emoji-opt:hover { border-color: var(--accent); }
 
@@ -245,76 +228,59 @@
     z-index: 999; pointer-events: none; white-space: nowrap;
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
-
   @media (max-width: 360px) { .appart-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
 
 <header>
-  <button class="back-btn" id="back-btn" onclick="showHome()">← Retour</button>
-  <h1 id="header-title">🏠 Mes Appartements</h1>
+  <button class="back-btn" id="back-btn">← Retour</button>
+  <h1 id="header-title">🏠 Besoins</h1>
 </header>
 
-<!-- HOME -->
-<div class="screen active" id="screen-home">
-  <div class="page-wrap" style="padding-top:16px;">
-    <p class="page-title">Liste de courses</p>
-    <p class="page-sub">Sélectionne un appartement pour indiquer ce qui manque</p>
-    <div class="appart-grid" id="appart-grid"></div>
+<!-- BESOINS HOME -->
+<div class="screen active" id="screen-besoins">
+  <div class="page-wrap">
+    <p class="page-title">Besoins</p>
+    <p class="page-sub">Ce qui manque dans chaque appartement</p>
+    <div class="appart-grid" id="besoins-grid"></div>
   </div>
 </div>
 
-<!-- BESOIN PAR APPART -->
-<div class="screen" id="screen-besoin">
+<!-- BESOIN DETAIL -->
+<div class="screen" id="screen-besoin-detail">
   <div class="page-wrap">
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
-      <div id="besoin-icon" style="font-size:2.4rem;width:52px;height:52px;background:var(--card);border-radius:14px;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);flex-shrink:0;"></div>
-      <div>
-        <div id="besoin-title" style="font-family:'DM Serif Display',serif;font-size:1.4rem;"></div>
-        <div id="besoin-sub" style="font-size:.85rem;color:var(--muted);margin-top:2px;"></div>
-        <div id="besoin-ts" style="font-size:.75rem;color:var(--muted);margin-top:2px;opacity:.8;"></div>
+    <div class="detail-header">
+      <div class="detail-icon" id="bd-icon"></div>
+      <div class="detail-info">
+        <h2 id="bd-title"></h2>
+        <p id="bd-sub"></p>
+        <p class="ts" id="bd-ts"></p>
       </div>
     </div>
-    <div class="card-list" id="besoin-list"></div>
+    <div class="card-list" id="bd-list"></div>
   </div>
 </div>
 
-<!-- COURSES -->
-<div class="screen" id="screen-courses">
+<!-- STOCK CENTRAL -->
+<div class="screen" id="screen-stock">
   <div class="page-wrap">
-    <p class="page-title">🛒 Mes courses</p>
-    <p class="page-sub" id="courses-sub"></p>
-    <div class="courses-actions">
-      <button class="action-btn btn-dark" onclick="toggleAllCourses()">✓ Tout cocher</button>
-      <button class="action-btn btn-light" onclick="resetCourses()">↺ Réinitialiser</button>
+    <p class="page-title">Stock central</p>
+    <p class="page-sub" id="stock-sub">Tes réserves disponibles</p>
+    <div class="card-list" id="stock-list"></div>
+  </div>
+</div>
+
+<!-- À ACHETER -->
+<div class="screen" id="screen-acheter">
+  <div class="page-wrap">
+    <p class="page-title">À acheter</p>
+    <p class="page-sub" id="acheter-sub"></p>
+    <div class="tab-switcher">
+      <button class="tab-btn active" id="tab-produit" onclick="switchTab('produit')">Par produit</button>
+      <button class="tab-btn" id="tab-appart" onclick="switchTab('appart')">Par appartement</button>
     </div>
-    <div class="card-list" id="courses-list"></div>
-  </div>
-</div>
-
-<!-- RÉPARTITION -->
-<div class="screen" id="screen-repartition">
-  <div class="page-wrap">
-    <p class="page-title">📦 Répartition</p>
-    <p class="page-sub" id="repartition-sub">Ce que tu dois apporter dans chaque appart</p>
-    <div id="repartition-list"></div>
-  </div>
-</div>
-
-<!-- REPARTITION DETAIL -->
-<div class="screen" id="screen-rep-detail">
-  <div class="page-wrap">
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
-      <div id="rep-detail-icon" style="font-size:2.4rem;width:52px;height:52px;background:var(--card);border-radius:14px;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);flex-shrink:0;"></div>
-      <div>
-        <div id="rep-detail-title" style="font-family:'DM Serif Display',serif;font-size:1.4rem;"></div>
-        <div id="rep-detail-sub" style="font-size:.85rem;color:var(--muted);margin-top:2px;"></div>
-        <div id="rep-detail-ts" style="font-size:.75rem;color:var(--muted);margin-top:2px;opacity:.8;"></div>
-      </div>
-    </div>
-    <div class="card-list" id="rep-detail-list"></div>
-    <button class="livrer-btn" id="rep-detail-tout-btn" onclick="livrerTout()" style="margin-top:16px;">✅ Tout marquer comme livré</button>
+    <div id="acheter-content"></div>
   </div>
 </div>
 
@@ -360,16 +326,15 @@
 <div class="toast" id="toast"></div>
 
 <nav class="nav-bar">
-  <button class="nav-btn active" id="nav-home" onclick="showHome()">
-    <span class="nav-icon">🏠</span><span>Apparts</span>
+  <button class="nav-btn active" id="nav-besoins" onclick="showBesoins()">
+    <span class="nav-icon">🏠</span><span>Besoins</span>
   </button>
-  <button class="nav-btn" id="nav-courses" onclick="showCourses()">
-    <span class="nav-badge" id="badge-courses"></span>
-    <span class="nav-icon">🛒</span><span>Courses</span>
+  <button class="nav-btn" id="nav-stock" onclick="showStock()">
+    <span class="nav-icon">📦</span><span>Stock</span>
   </button>
-  <button class="nav-btn" id="nav-repartition" onclick="showRepartition()">
-    <span class="nav-badge" id="badge-repartition"></span>
-    <span class="nav-icon">📦</span><span>Répartition</span>
+  <button class="nav-btn" id="nav-acheter" onclick="showAcheter()">
+    <span class="nav-badge" id="badge-acheter"></span>
+    <span class="nav-icon">🛒</span><span>À acheter</span>
   </button>
   <button class="nav-btn" id="nav-settings" onclick="showSettings()">
     <span class="nav-icon">⚙️</span><span>Réglages</span>
@@ -378,12 +343,11 @@
 
 <script>
 // ── STORAGE ───────────────────────────────────────────────────────────────────
-const KEY_APPARTS  = 'airbnb_apparts_v3';
-const KEY_PRODUITS = 'airbnb_produits_v3';
-const KEY_BESOINS  = 'airbnb_besoins_v3';   // { appartId: { produit: qty } }
-const KEY_ACHETES  = 'airbnb_achetes_v3';   // { produit: { done: bool, qty: int } }
-const KEY_LIVRES      = 'airbnb_livres_v3';
-const KEY_TIMESTAMPS  = 'airbnb_timestamps_v3'; // { appartId: ISO string }    // { appartId: bool }
+const KEY_APPARTS    = 'rnb_apparts_v1';
+const KEY_PRODUITS   = 'rnb_produits_v1';
+const KEY_BESOINS    = 'rnb_besoins_v1';    // { appartId: { produit: qty } }
+const KEY_STOCK      = 'rnb_stock_v1';      // { produit: qty }
+const KEY_TIMESTAMPS = 'rnb_timestamps_v1'; // { appartId: ISO }
 
 const DEFAULT_APPARTS = [
   { id:'A', name:'Appart A', emoji:'🏡' },
@@ -406,434 +370,388 @@ function load(key, def) {
 }
 function save(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
 
-let apparts  = load(KEY_APPARTS,  DEFAULT_APPARTS);
-let produits = load(KEY_PRODUITS, DEFAULT_PRODUITS);
-let besoins  = load(KEY_BESOINS,  {});
-let achetes  = load(KEY_ACHETES,  {});
-let livres      = load(KEY_LIVRES,      {});
-let timestamps  = load(KEY_TIMESTAMPS,  {});
+let apparts    = load(KEY_APPARTS,    DEFAULT_APPARTS);
+let produits   = load(KEY_PRODUITS,   DEFAULT_PRODUITS);
+let besoins    = load(KEY_BESOINS,    {});
+let stockC     = load(KEY_STOCK,      {});
+let timestamps = load(KEY_TIMESTAMPS, {});
 
-// Sync besoins structure
-function syncBesoins() {
+// Sync structures
+function syncAll() {
   for (const ap of apparts) {
     if (!besoins[ap.id]) besoins[ap.id] = {};
-    for (const p of produits)
+    for (const p of produits) {
       if (besoins[ap.id][p] === undefined) besoins[ap.id][p] = 0;
+    }
+  }
+  for (const p of produits) {
+    if (stockC[p] === undefined) stockC[p] = 0;
   }
   save(KEY_BESOINS, besoins);
+  save(KEY_STOCK,   stockC);
 }
-syncBesoins();
+syncAll();
 
-let currentAppart = null;
-let editApparts = [], editProduits = [], emojiTarget = null;
+let currentAppart  = null;
+let currentTab     = 'produit';
+let editApparts    = [], editProduits = [], emojiTarget = null;
+let dragSrc        = null;
 
-// ── NAV ───────────────────────────────────────────────────────────────────────
-function setNav(active) {
-  ['home','courses','repartition','settings'].forEach(id =>
-    document.getElementById('nav-'+id).classList.toggle('active', id===active));
-}
-
-function hideAll() {
-  ['home','besoin','courses','repartition','rep-detail','settings'].forEach(id =>
-    document.getElementById('screen-'+id).classList.remove('active'));
-  document.getElementById('back-btn').classList.remove('visible');
-}
-
-function updateBadges() {
-  // Courses badge = nb produits à acheter non encore cochés
-  const toShop = getCoursesItems().filter(i => !achetes[i.key]?.done).length;
-  const bc = document.getElementById('badge-courses');
-  bc.textContent = toShop;
-  bc.classList.toggle('visible', toShop > 0);
-
-  // Répartition badge = nb apparts avec articles achetés non encore tous livrés
-  const toDeliver = apparts.filter(ap => {
-    const lines = produits.filter(p => achetes[p+':'+ap.id]?.done);
-    if (lines.length === 0) return false;
-    return lines.some(p => !livres[p+':'+ap.id]);
-  }).length;
-  const br = document.getElementById('badge-repartition');
-  br.textContent = toDeliver;
-  br.classList.toggle('visible', toDeliver > 0);
-}
-
-// ── HOME ──────────────────────────────────────────────────────────────────────
-function showHome() {
-  editApparts = []; editProduits = [];
-  hideAll();
-  document.getElementById('screen-home').classList.add('active');
-  document.getElementById('header-title').textContent = '🏠 Mes Appartements';
-  currentAppart = null; setNav('home'); renderHome(); updateBadges();
-}
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function safeid(s) { return s.replace(/[^a-z0-9]/gi,'_'); }
 
 function formatTimestamp(iso) {
   if (!iso) return 'Jamais modifié';
   const d = new Date(iso);
-  const now = new Date();
-  const diffMs = now - d;
+  const diffMs  = Date.now() - d;
   const diffMin = Math.floor(diffMs / 60000);
   const diffH   = Math.floor(diffMs / 3600000);
   const diffD   = Math.floor(diffMs / 86400000);
   if (diffMin < 1)  return 'À l\'instant';
   if (diffMin < 60) return `Il y a ${diffMin} min`;
   if (diffH < 24)   return `Il y a ${diffH}h`;
-  if (diffD === 1)  return 'Hier ' + d.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
-  return d.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'}) + ' à ' + d.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+  if (diffD === 1)  return 'Hier ' + d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}) + ' à ' + d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
 }
 
-function renderHome() {
-  const grid = document.getElementById('appart-grid');
+// Total besoin pour un produit (tous apparts)
+function totalBesoin(produit) {
+  return apparts.reduce((s, ap) => s + (besoins[ap.id]?.[produit] || 0), 0);
+}
+
+// Quantité à acheter pour un produit = max(0, totalBesoin - stock)
+function qtyAcheter(produit) {
+  return Math.max(0, totalBesoin(produit) - (stockC[produit] || 0));
+}
+
+// ── NAV ───────────────────────────────────────────────────────────────────────
+function setNav(active) {
+  ['besoins','stock','acheter','settings'].forEach(id =>
+    document.getElementById('nav-'+id).classList.toggle('active', id===active));
+}
+
+function hideAll() {
+  ['besoins','besoin-detail','stock','acheter','settings'].forEach(id =>
+    document.getElementById('screen-'+id).classList.remove('active'));
+  document.getElementById('back-btn').classList.remove('visible');
+}
+
+document.getElementById('back-btn').onclick = function() {
+  if (currentAppart) { currentAppart = null; showBesoins(); }
+  else showBesoins();
+};
+
+function updateBadge() {
+  const total = produits.filter(p => qtyAcheter(p) > 0).length;
+  const b = document.getElementById('badge-acheter');
+  b.textContent = total;
+  b.classList.toggle('visible', total > 0);
+}
+
+// ── BESOINS HOME ──────────────────────────────────────────────────────────────
+function showBesoins() {
+  editApparts = []; editProduits = [];
+  currentAppart = null;
+  hideAll();
+  document.getElementById('screen-besoins').classList.add('active');
+  document.getElementById('header-title').textContent = '🏠 Besoins';
+  setNav('besoins'); renderBesoinsHome(); updateBadge();
+}
+
+function renderBesoinsHome() {
+  const grid = document.getElementById('besoins-grid');
   grid.innerHTML = '';
   for (const ap of apparts) {
     const b = besoins[ap.id] || {};
-    const total = Object.values(b).reduce((a,v)=>a+v,0);
-    const nbProd = Object.values(b).filter(v=>v>0).length;
+    const nbBesoin = produits.filter(p => b[p] > 0).length;
+    const totalQty = produits.reduce((s,p) => s+(b[p]||0), 0);
     const card = document.createElement('div');
     card.className = 'appart-card';
     card.innerHTML = `
       <span class="appart-icon">${ap.emoji}</span>
       <div class="appart-name">${ap.name}</div>
-      <div class="appart-count">${produits.length} produits</div>
-      ${nbProd > 0
-        ? `<div class="appart-need">🛒 ${nbProd} produit${nbProd>1?'s':''} · ${total} unité${total>1?'s':''}</div>`
-        : `<div class="appart-count" style="color:var(--green)">✓ Rien à acheter</div>`}
+      <div class="appart-meta">${produits.length} produits</div>
+      ${nbBesoin > 0
+        ? `<div class="appart-need">🔴 ${nbBesoin} produit${nbBesoin>1?'s':''} · ${totalQty} unité${totalQty>1?'s':''}</div>`
+        : `<div class="appart-ok">✓ Rien ne manque</div>`}
       <div class="appart-ts">🕐 ${formatTimestamp(timestamps[ap.id])}</div>`;
-    card.onclick = () => showBesoin(ap.id);
+    card.onclick = () => showBesoinDetail(ap.id);
     grid.appendChild(card);
   }
 }
 
-// ── BESOIN PAR APPART ─────────────────────────────────────────────────────────
-function showBesoin(appartId) {
-  const ap = apparts.find(a=>a.id===appartId); if (!ap) return;
-  hideAll(); currentAppart = appartId;
-  document.getElementById('screen-besoin').classList.add('active');
+// ── BESOIN DETAIL ─────────────────────────────────────────────────────────────
+function showBesoinDetail(appartId) {
+  const ap = apparts.find(a => a.id === appartId); if (!ap) return;
+  currentAppart = appartId;
+  hideAll();
+  document.getElementById('screen-besoin-detail').classList.add('active');
   document.getElementById('back-btn').classList.add('visible');
   document.getElementById('header-title').textContent = ap.name;
-  document.getElementById('besoin-icon').textContent = ap.emoji;
-  document.getElementById('besoin-title').textContent = ap.name;
-  document.getElementById('besoin-ts').textContent = '🕐 ' + formatTimestamp(timestamps[appartId]);
-  setNav('home'); renderBesoin(appartId);
+  document.getElementById('bd-icon').textContent = ap.emoji;
+  document.getElementById('bd-title').textContent = ap.name;
+  document.getElementById('bd-ts').textContent = '🕐 ' + formatTimestamp(timestamps[appartId]);
+  setNav('besoins'); renderBesoinDetail(appartId);
 }
 
-function safeid(s) { return s.replace(/[^a-z0-9]/gi,'_'); }
-
-function renderBesoin(appartId) {
-  const b = besoins[appartId] || {};
-  const list = document.getElementById('besoin-list');
+function renderBesoinDetail(appartId) {
+  const b    = besoins[appartId] || {};
+  const list = document.getElementById('bd-list');
   list.innerHTML = '';
-  let total = 0;
   for (const p of produits) {
-    const qty = b[p] ?? 0;
-    total += qty;
-    const el = document.createElement('div');
-    el.className = 'need-item';
-    const ps = p.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const qty = b[p] || 0;
+    const el  = document.createElement('div');
+    el.className = 'qty-row';
+    const ps  = p.replace(/'/g,"\\'");
     el.innerHTML = `
-      <span class="need-item-name">${p}</span>
-      <div class="need-controls">
+      <div style="flex:1;">
+        <div class="qty-row-name">${p}</div>
+      </div>
+      <div class="qty-controls">
+        <button class="qty-btn btn-reset ${qty>0?'active':''}" id="br-${safeid(p)}" onclick="resetBesoin('${appartId}','${ps}')" title="Remettre à 0">↺</button>
         <button class="qty-btn btn-minus" onclick="updateBesoin('${appartId}','${ps}',-1)">−</button>
-        <span class="qty-value ${qty===0?'zero':'has'}" id="bqty-${safeid(p)}">${qty}</span>
+        <span class="qty-val ${qty===0?'zero':'has'}" id="bq-${safeid(p)}">${qty}</span>
         <button class="qty-btn btn-plus"  onclick="updateBesoin('${appartId}','${ps}',+1)">+</button>
       </div>`;
     list.appendChild(el);
   }
-  const nbProd = Object.values(b).filter(v=>v>0).length;
-  document.getElementById('besoin-sub').textContent =
-    nbProd > 0 ? `${nbProd} produit${nbProd>1?'s':''} à acheter · ${total} unité${total>1?'s':''}` : 'Rien à acheter pour cet appart';
+  updateBesoinSub(appartId);
+}
+
+function updateBesoinSub(appartId) {
+  const b = besoins[appartId]||{};
+  const nb = produits.filter(p=>b[p]>0).length;
+  const total = produits.reduce((s,p)=>s+(b[p]||0),0);
+  document.getElementById('bd-sub').textContent =
+    nb > 0 ? `${nb} produit${nb>1?'s':''} manquant${nb>1?'s':''} · ${total} unité${total>1?'s':''}` : 'Rien ne manque';
+}
+
+function resetBesoin(appartId, produit) {
+  if (!besoins[appartId] || besoins[appartId][produit] === 0) return;
+  besoins[appartId][produit] = 0;
+  timestamps[appartId] = new Date().toISOString();
+  save(KEY_BESOINS, besoins);
+  save(KEY_TIMESTAMPS, timestamps);
+  const el = document.getElementById(`bq-${safeid(produit)}`);
+  if (el) { el.textContent = 0; el.className = 'qty-val zero'; }
+  const br = document.getElementById(`br-${safeid(produit)}`);
+  if (br) br.classList.remove('active');
+  document.getElementById('bd-ts').textContent = '🕐 ' + formatTimestamp(timestamps[appartId]);
+  updateBesoinSub(appartId);
+  updateBadge();
+  showToast('↺ Remis à 0');
 }
 
 function updateBesoin(appartId, produit, delta) {
-  if (!besoins[appartId]) besoins[appartId]={};
-  const cur  = besoins[appartId][produit]??0;
-  const next = Math.max(0, cur+delta);
-  if (next===cur) { if (delta<0) showToast('Déjà à 0 !'); return; }
+  if (!besoins[appartId]) besoins[appartId] = {};
+  const cur  = besoins[appartId][produit] || 0;
+  const next = Math.max(0, cur + delta);
+  if (next === cur) { if (delta < 0) showToast('Déjà à 0 !'); return; }
   besoins[appartId][produit] = next;
   timestamps[appartId] = new Date().toISOString();
-  save(KEY_TIMESTAMPS, timestamps);
   save(KEY_BESOINS, besoins);
-  // Update timestamp display in real time
-  const tsEl = document.getElementById('besoin-ts');
-  if (tsEl) tsEl.textContent = '🕐 ' + formatTimestamp(timestamps[appartId]);
-  // Reset achat state for this item if qty changed
-  const key = produit+':'+appartId;
-  if (achetes[key]) { delete achetes[key]; save(KEY_ACHETES, achetes); }
-  const el = document.getElementById(`bqty-${safeid(produit)}`);
+  save(KEY_TIMESTAMPS, timestamps);
+  const el = document.getElementById(`bq-${safeid(produit)}`);
   if (el) {
     el.textContent = next;
-    el.className = 'qty-value '+(next===0?'zero':'has');
-    el.style.transform='scale(1.4)';
-    setTimeout(()=>el.style.transform='',150);
+    el.className = 'qty-val ' + (next===0?'zero':'has');
+    el.style.transform = 'scale(1.4)';
+    setTimeout(() => el.style.transform = '', 150);
   }
-  // Update subtitle
-  const b = besoins[appartId]||{};
-  const nbProd = Object.values(b).filter(v=>v>0).length;
-  const total  = Object.values(b).reduce((a,v)=>a+v,0);
-  document.getElementById('besoin-sub').textContent =
-    nbProd > 0 ? `${nbProd} produit${nbProd>1?'s':''} à acheter · ${total} unité${total>1?'s':''}` : 'Rien à acheter pour cet appart';
-  updateBadges();
+  const br = document.getElementById(`br-${safeid(produit)}`);
+  if (br) br.classList.toggle('active', next > 0);
+  document.getElementById('bd-ts').textContent = '🕐 ' + formatTimestamp(timestamps[appartId]);
+  updateBesoinSub(appartId);
+  updateBadge();
 }
 
-// ── COURSES ───────────────────────────────────────────────────────────────────
-// Agrège tous les besoins par produit
-function getCoursesItems() {
-  const map = {};
-  for (const ap of apparts) {
-    const b = besoins[ap.id]||{};
-    for (const p of produits) {
-      const qty = b[p]||0;
-      if (qty > 0) {
-        const key = p+':'+ap.id;
-        if (!map[p]) map[p] = { name: p, details: [], totalQty: 0, keys: [] };
-        map[p].details.push(`${ap.name}: ${qty}`);
-        map[p].totalQty += qty;
-        map[p].keys.push({ key, qty, appartId: ap.id });
-      }
-    }
-  }
-  return Object.values(map).map(item => ({
-    ...item,
-    key: item.name // unique key per product line
-  }));
-}
-
-function showCourses() {
+// ── STOCK CENTRAL ─────────────────────────────────────────────────────────────
+function showStock() {
   editApparts = []; editProduits = [];
   hideAll();
-  document.getElementById('screen-courses').classList.add('active');
-  document.getElementById('header-title').textContent = '🛒 Mes courses';
-  setNav('courses'); renderCourses(); updateBadges();
+  document.getElementById('screen-stock').classList.add('active');
+  document.getElementById('header-title').textContent = '📦 Stock central';
+  setNav('stock'); renderStock();
 }
 
-function renderCourses() {
-  const items = getCoursesItems();
-  const list  = document.getElementById('courses-list');
+function renderStock() {
+  const list = document.getElementById('stock-list');
   list.innerHTML = '';
+  let totalUnits = 0;
+  for (const p of produits) {
+    const qty    = stockC[p] || 0;
+    const besoin = totalBesoin(p);
+    totalUnits  += qty;
+    const el = document.createElement('div');
+    el.className = 'qty-row';
+    const ps = p.replace(/'/g,"\\'");
+    el.innerHTML = `
+      <div style="flex:1;">
+        <div class="qty-row-name">${p}</div>
+        <div class="qty-row-sub">Besoin total : ${besoin}</div>
+      </div>
+      <div class="qty-controls">
+        <button class="qty-btn btn-minus" onclick="updateStock('${ps}',-1)">−</button>
+        <span class="qty-val ${qty===0?'zero':qty>=besoin?'good':'has'}" id="sq-${safeid(p)}">${qty}</span>
+        <button class="qty-btn btn-plus"  onclick="updateStock('${ps}',+1)">+</button>
+      </div>`;
+    list.appendChild(el);
+  }
+  const nb = produits.filter(p=>(stockC[p]||0)>0).length;
+  document.getElementById('stock-sub').textContent =
+    nb > 0 ? `${nb} produit${nb>1?'s':''} en stock · ${totalUnits} unité${totalUnits>1?'s':''}` : 'Stock vide';
+}
 
-  if (items.length === 0) {
-    list.innerHTML = `<div class="empty-state">
+function updateStock(produit, delta) {
+  const cur  = stockC[produit] || 0;
+  const next = Math.max(0, cur + delta);
+  if (next === cur) { if (delta < 0) showToast('Déjà à 0 !'); return; }
+  stockC[produit] = next;
+  save(KEY_STOCK, stockC);
+  const besoin = totalBesoin(produit);
+  const el = document.getElementById(`sq-${safeid(produit)}`);
+  if (el) {
+    el.textContent = next;
+    el.className = 'qty-val ' + (next===0?'zero':next>=besoin?'good':'has');
+    el.style.transform = 'scale(1.4)';
+    setTimeout(() => el.style.transform = '', 150);
+  }
+  // Update sub text
+  const nb = produits.filter(p=>(stockC[p]||0)>0).length;
+  const total = produits.reduce((s,p)=>s+(stockC[p]||0),0);
+  document.getElementById('stock-sub').textContent =
+    nb > 0 ? `${nb} produit${nb>1?'s':''} en stock · ${total} unité${total>1?'s':''}` : 'Stock vide';
+  updateBadge();
+}
+
+// ── À ACHETER ─────────────────────────────────────────────────────────────────
+function showAcheter() {
+  editApparts = []; editProduits = [];
+  hideAll();
+  document.getElementById('screen-acheter').classList.add('active');
+  document.getElementById('header-title').textContent = '🛒 À acheter';
+  setNav('acheter'); renderAcheter(); updateBadge();
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('tab-produit').classList.toggle('active', tab==='produit');
+  document.getElementById('tab-appart').classList.toggle('active', tab==='appart');
+  renderAcheter();
+}
+
+function renderAcheter() {
+  const content = document.getElementById('acheter-content');
+  content.innerHTML = '';
+
+  const toShop = produits.filter(p => qtyAcheter(p) > 0);
+  const ok     = produits.filter(p => qtyAcheter(p) === 0 && totalBesoin(p) > 0);
+
+  const totalItems = toShop.length;
+  const totalUnits = toShop.reduce((s,p) => s+qtyAcheter(p), 0);
+  document.getElementById('acheter-sub').textContent =
+    totalItems > 0
+      ? `${totalItems} produit${totalItems>1?'s':''} à acheter · ${totalUnits} unité${totalUnits>1?'s':''}`
+      : 'Tout est couvert par le stock 🎉';
+
+  if (totalBesoin(produits[0]) === 0 && produits.every(p => totalBesoin(p) === 0)) {
+    content.innerHTML = `<div class="empty-state">
       <div class="empty-icon">✅</div>
-      <p>Aucun article à acheter.<br>Va dans un appartement pour indiquer ce qui manque.</p>
+      <p>Aucun besoin enregistré.<br>Va dans Besoins pour indiquer ce qui manque.</p>
     </div>`;
-    document.getElementById('courses-sub').textContent = '';
     return;
   }
 
-  const done  = items.filter(i => isItemFullyDone(i)).length;
-  document.getElementById('courses-sub').textContent =
-    `${done}/${items.length} articles cochés`;
-
-  for (const item of items) {
-    const isDone = isItemFullyDone(item);
-    const el = document.createElement('div');
-    el.className = 'course-item'+(isDone?' done':'');
-    el.id = 'course-'+safeid(item.name);
-    el.innerHTML = `
-      <button class="course-check" onclick="toggleCourse('${item.name.replace(/'/g,"\\'")}')">
-        ${isDone?'✓':''}
-      </button>
-      <div class="course-info">
-        <div class="course-name">${item.name}</div>
-        <div class="course-detail">${item.details.join(' · ')}</div>
-      </div>
-      <span class="course-qty">${item.totalQty}</span>`;
-    list.appendChild(el);
+  if (currentTab === 'produit') {
+    renderAcheterParProduit(content, toShop, ok);
+  } else {
+    renderAcheterParAppart(content);
   }
 }
 
-function isItemFullyDone(item) {
-  return item.keys.every(k => achetes[k.key]?.done);
-}
-
-function toggleCourse(produit) {
-  const items = getCoursesItems();
-  const item  = items.find(i=>i.name===produit);
-  if (!item) return;
-  const isDone = isItemFullyDone(item);
-  for (const k of item.keys) {
-    if (!isDone) achetes[k.key] = { done: true, qty: k.qty, appartId: k.appartId };
-    else delete achetes[k.key];
-  }
-  save(KEY_ACHETES, achetes);
-  renderCourses(); updateBadges();
-}
-
-function toggleAllCourses() {
-  const items  = getCoursesItems();
-  const allDone = items.every(i=>isItemFullyDone(i));
-  for (const item of items) {
-    for (const k of item.keys) {
-      if (!allDone) achetes[k.key] = { done: true, qty: k.qty, appartId: k.appartId };
-      else delete achetes[k.key];
-    }
-  }
-  save(KEY_ACHETES, achetes);
-  renderCourses(); updateBadges();
-}
-
-function resetCourses() {
-  if (!confirm('Réinitialiser tous les besoins et repartir de zéro ?')) return;
-  besoins = {}; achetes = {}; livres = {};
-  syncBesoins();
-  save(KEY_ACHETES, achetes);
-  save(KEY_LIVRES,  livres);
-  renderCourses(); updateBadges();
-  showToast('↺ Liste réinitialisée');
-}
-
-// ── RÉPARTITION ───────────────────────────────────────────────────────────────
-let currentRepAppart = null;
-
-function showRepartition() {
-  editApparts = []; editProduits = [];
-  currentRepAppart = null;
-  hideAll();
-  document.getElementById('screen-repartition').classList.add('active');
-  document.getElementById('header-title').textContent = '📦 Répartition';
-  document.getElementById('back-btn').classList.remove('visible');
-  setNav('repartition'); renderRepartition(); updateBadges();
-}
-
-function showRepDetail(appartId) {
-  currentRepAppart = appartId;
-  const ap = apparts.find(a => a.id === appartId);
-  hideAll();
-  document.getElementById('screen-rep-detail').classList.add('active');
-  document.getElementById('back-btn').classList.add('visible');
-  document.getElementById('header-title').textContent = ap.name;
-  document.getElementById('rep-detail-icon').textContent = ap.emoji;
-  document.getElementById('rep-detail-title').textContent = ap.name;
-  document.getElementById('rep-detail-ts').textContent = '🕐 ' + formatTimestamp(timestamps[appartId]);
-  setNav('repartition');
-  renderRepDetail(appartId);
-}
-
-// Override back button for rep-detail
-const origShowHome = null;
-document.getElementById('back-btn').onclick = function() {
-  if (currentRepAppart) { currentRepAppart = null; showRepartition(); }
-  else showHome();
-};
-
-function renderRepartition() {
-  const list = document.getElementById('repartition-list');
-  list.innerHTML = '';
-  let hasAnything = false;
-
-  for (const ap of apparts) {
-    const lines = produits.filter(p => achetes[p+':'+ap.id]?.done);
-    if (lines.length === 0) continue;
-    hasAnything = true;
-    const livresCount = lines.filter(p => livres[p+':'+ap.id]).length;
-    const allDone = livresCount === lines.length;
-
-    const block = document.createElement('div');
-    block.className = 'repartition-appart';
-    block.style.cursor = 'pointer';
-    block.innerHTML = `
-      <div class="repartition-header">
-        <span style="font-size:1.8rem;">${ap.emoji}</span>
-        <div class="repartition-header-info">
-          <div class="repartition-header-name">${ap.name}</div>
-          <div class="repartition-header-count">${livresCount}/${lines.length} produit${lines.length>1?'s':''} livré${livresCount>1?'s':''}</div>
-          <div class="repartition-header-count">🕐 ${formatTimestamp(timestamps[ap.id])}</div>
+function renderAcheterParProduit(container, toShop, ok) {
+  if (toShop.length > 0) {
+    const title = document.createElement('div');
+    title.className = 'acheter-section-title';
+    title.textContent = `À acheter (${toShop.length})`;
+    container.appendChild(title);
+    for (const p of toShop) {
+      const qty    = qtyAcheter(p);
+      const besoin = totalBesoin(p);
+      const stock  = stockC[p] || 0;
+      const detail = apparts
+        .filter(ap => (besoins[ap.id]?.[p]||0) > 0)
+        .map(ap => `${ap.name}: ${besoins[ap.id][p]}`)
+        .join(' · ');
+      const el = document.createElement('div');
+      el.className = 'acheter-item';
+      el.innerHTML = `
+        <div style="flex:1;">
+          <div class="acheter-item-name">${p}</div>
+          <div class="acheter-item-detail">Besoin: ${besoin} · Stock: ${stock} · ${detail}</div>
         </div>
-        <span style="color:var(--muted);font-size:1.2rem;">›</span>
-      </div>`;
-    if (allDone) {
-      block.querySelector('.repartition-header').style.opacity = '.5';
+        <span class="acheter-badge badge-buy">× ${qty}</span>`;
+      container.appendChild(el);
     }
-    block.onclick = () => showRepDetail(ap.id);
-    list.appendChild(block);
   }
 
-  if (!hasAnything) {
-    list.innerHTML = `<div class="empty-state">
-      <div class="empty-icon">📦</div>
-      <p>Coche des articles dans "Courses" pour voir la répartition par appartement.</p>
+  if (ok.length > 0) {
+    const title2 = document.createElement('div');
+    title2.className = 'acheter-section-title';
+    title2.textContent = `Couvert par le stock (${ok.length})`;
+    container.appendChild(title2);
+    for (const p of ok) {
+      const besoin = totalBesoin(p);
+      const stock  = stockC[p] || 0;
+      const el = document.createElement('div');
+      el.className = 'acheter-item';
+      el.style.opacity = '.6';
+      el.innerHTML = `
+        <div style="flex:1;">
+          <div class="acheter-item-name">${p}</div>
+          <div class="acheter-item-detail">Besoin: ${besoin} · Stock: ${stock}</div>
+        </div>
+        <span class="acheter-badge badge-ok">✓</span>`;
+      container.appendChild(el);
+    }
+  }
+}
+
+function renderAcheterParAppart(container) {
+  for (const ap of apparts) {
+    const b = besoins[ap.id] || {};
+    const lines = produits.filter(p => b[p] > 0);
+    if (lines.length === 0) continue;
+
+    const title = document.createElement('div');
+    title.className = 'acheter-section-title';
+    title.textContent = `${ap.emoji} ${ap.name}`;
+    container.appendChild(title);
+
+    for (const p of lines) {
+      const besoin = b[p] || 0;
+      const stock  = stockC[p] || 0;
+      // Portion du stock allouée à cet appart (proportionnelle)
+      const totalB = totalBesoin(p);
+      const stockPart = totalB > 0 ? Math.min(besoin, Math.round((besoin / totalB) * stock)) : 0;
+      const toShop = Math.max(0, besoin - stockPart);
+      const el = document.createElement('div');
+      el.className = 'acheter-item';
+      el.innerHTML = `
+        <div style="flex:1;">
+          <div class="acheter-item-name">${p}</div>
+          <div class="acheter-item-detail">Besoin: ${besoin} · Stock alloué: ${stockPart}</div>
+        </div>
+        <span class="acheter-badge ${toShop>0?'badge-buy':'badge-ok'}">${toShop>0?'× '+toShop:'✓'}</span>`;
+      container.appendChild(el);
+    }
+  }
+
+  if (document.getElementById('acheter-content').children.length === 0) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">✅</div><p>Rien à acheter !</p>
     </div>`;
-    document.getElementById('repartition-sub').textContent = '';
-  } else {
-    const totalApparts = apparts.filter(ap => produits.some(p => achetes[p+':'+ap.id]?.done)).length;
-    const livresApparts = apparts.filter(ap => {
-      const lines = produits.filter(p => achetes[p+':'+ap.id]?.done);
-      return lines.length > 0 && lines.every(p => livres[p+':'+ap.id]);
-    }).length;
-    document.getElementById('repartition-sub').textContent =
-      `${livresApparts}/${totalApparts} appartement${totalApparts>1?'s':''} livrés`;
   }
-}
-
-function renderRepDetail(appartId) {
-  const ap = apparts.find(a => a.id === appartId);
-  const lines = produits.filter(p => achetes[p+':'+appartId]?.done);
-  const livresCount = lines.filter(p => livres[p+':'+appartId]).length;
-  const list = document.getElementById('rep-detail-list');
-  list.innerHTML = '';
-
-  document.getElementById('rep-detail-sub').textContent =
-    `${livresCount}/${lines.length} produit${lines.length>1?'s':''} livré${livresCount>1?'s':''}`;
-
-  for (const p of lines) {
-    const key = p+':'+appartId;
-    const isDone = !!livres[key];
-    const qty = achetes[key]?.qty || 0;
-    const el = document.createElement('div');
-    el.className = 'course-item' + (isDone ? ' done' : '');
-    el.id = 'rep-row-' + safeid(p);
-    el.innerHTML = `
-      <button class="course-check" onclick="toggleLivreProduit('${appartId}','${p.replace(/'/g,"\'")}')">
-        ${isDone ? '✓' : ''}
-      </button>
-      <div class="course-info">
-        <div class="course-name">${p}</div>
-      </div>
-      <span class="course-qty">× ${qty}</span>`;
-    list.appendChild(el);
-  }
-
-  // Bouton "tout livrer"
-  const allDone = lines.every(p => livres[p+':'+appartId]);
-  const btn = document.getElementById('rep-detail-tout-btn');
-  btn.textContent = allDone ? '✓ Tout livré' : '✅ Tout marquer comme livré';
-  btn.disabled = allDone;
-  btn.className = 'livrer-btn' + (allDone ? ' done' : '');
-}
-
-function toggleLivreProduit(appartId, produit) {
-  const key = produit+':'+appartId;
-  if (livres[key]) {
-    delete livres[key];
-  } else {
-    livres[key] = true;
-    // Effacer besoin et achat pour ce produit/appart
-    if (besoins[appartId]) besoins[appartId][produit] = 0;
-    delete achetes[key];
-  }
-  timestamps[appartId] = new Date().toISOString();
-  save(KEY_TIMESTAMPS, timestamps);
-  save(KEY_LIVRES, livres);
-  save(KEY_BESOINS, besoins);
-  save(KEY_ACHETES, achetes);
-  renderRepDetail(appartId);
-  updateBadges();
-}
-
-function livrerTout() {
-  if (!currentRepAppart) return;
-  const lines = produits.filter(p => achetes[p+':'+currentRepAppart]?.done);
-  for (const p of lines) {
-    const key = p+':'+currentRepAppart;
-    livres[key] = true;
-    if (besoins[currentRepAppart]) besoins[currentRepAppart][p] = 0;
-    delete achetes[key];
-  }
-  save(KEY_LIVRES, livres);
-  save(KEY_BESOINS, besoins);
-  save(KEY_ACHETES, achetes);
-  showToast('✅ Tout livré !');
-  renderRepDetail(currentRepAppart);
-  updateBadges();
 }
 
 // ── SETTINGS ──────────────────────────────────────────────────────────────────
@@ -845,10 +763,9 @@ function showSettings() {
 }
 
 function renderSettings() {
-  if (editApparts.length === 0) editApparts = apparts.map(a=>({...a}));
+  if (editApparts.length === 0)  editApparts  = apparts.map(a=>({...a}));
   if (editProduits.length === 0) editProduits = [...produits];
-  renderAppartsList();
-  renderProduitsList();
+  renderAppartsList(); renderProduitsList();
 }
 
 function renderAppartsList() {
@@ -856,31 +773,21 @@ function renderAppartsList() {
   al.innerHTML = '';
   editApparts.forEach((ap, i) => {
     const el = document.createElement('div');
-    el.className = 'settings-item';
-    el.id = `edit-ap-${i}`;
-    el.draggable = true;
-    el.dataset.type = 'appart';
-    el.dataset.index = i;
+    el.className = 'settings-item'; el.id = `edit-ap-${i}`;
+    el.draggable = true; el.dataset.type = 'appart'; el.dataset.index = i;
+    const handle = document.createElement('span');
+    handle.className = 'drag-handle'; handle.textContent = '⠿';
     const emoji = document.createElement('span');
-    emoji.className = 'settings-item-emoji';
-    emoji.textContent = ap.emoji;
+    emoji.className = 'settings-item-emoji'; emoji.textContent = ap.emoji;
     emoji.onclick = () => openEmojiPicker(i);
     const input = document.createElement('input');
-    input.className = 'settings-item-input';
-    input.value = ap.name;
+    input.className = 'settings-item-input'; input.value = ap.name;
     input.placeholder = "Nom de l'appartement";
     input.oninput = () => { editApparts[i].name = input.value; };
-    const delBtn = document.createElement('button');
-    delBtn.className = 'settings-delete-btn';
-    delBtn.textContent = '×';
-    delBtn.onclick = () => removeAppart(i);
-    const handle = document.createElement('span');
-    handle.className = 'drag-handle';
-    handle.textContent = '⠿';
-    el.appendChild(handle);
-    el.appendChild(emoji);
-    el.appendChild(input);
-    el.appendChild(delBtn);
+    const del = document.createElement('button');
+    del.className = 'settings-delete-btn'; del.textContent = '×';
+    del.onclick = () => { if (editApparts.length<=1){showToast('Il faut au moins 1 appartement');return;} editApparts.splice(i,1); renderAppartsList(); };
+    el.append(handle, emoji, input, del);
     addDragEvents(el, 'appart');
     al.appendChild(el);
   });
@@ -891,26 +798,18 @@ function renderProduitsList() {
   pl.innerHTML = '';
   editProduits.forEach((p, i) => {
     const el = document.createElement('div');
-    el.className = 'settings-item';
-    el.id = `edit-pr-${i}`;
-    el.draggable = true;
-    el.dataset.type = 'produit';
-    el.dataset.index = i;
+    el.className = 'settings-item'; el.id = `edit-pr-${i}`;
+    el.draggable = true; el.dataset.type = 'produit'; el.dataset.index = i;
     const handle = document.createElement('span');
-    handle.className = 'drag-handle';
-    handle.textContent = '⠿';
+    handle.className = 'drag-handle'; handle.textContent = '⠿';
     const input = document.createElement('input');
-    input.className = 'settings-item-input';
-    input.value = p;
+    input.className = 'settings-item-input'; input.value = p;
     input.placeholder = 'Nom du produit';
     input.oninput = () => { editProduits[i] = input.value; };
-    const delBtn = document.createElement('button');
-    delBtn.className = 'settings-delete-btn';
-    delBtn.textContent = '×';
-    delBtn.onclick = () => removeProduit(i);
-    el.appendChild(handle);
-    el.appendChild(input);
-    el.appendChild(delBtn);
+    const del = document.createElement('button');
+    del.className = 'settings-delete-btn'; del.textContent = '×';
+    del.onclick = () => { if (editProduits.length<=1){showToast('Il faut au moins 1 produit');return;} editProduits.splice(i,1); renderProduitsList(); };
+    el.append(handle, input, del);
     addDragEvents(el, 'produit');
     pl.appendChild(el);
   });
@@ -919,37 +818,43 @@ function renderProduitsList() {
 function addAppart() {
   editApparts.push({ id:'AP_'+Date.now(), name:'', emoji:'🏠' });
   renderAppartsList();
-  setTimeout(()=>{
-    const idx = editApparts.length - 1;
-    const el = document.querySelector(`#edit-ap-${idx} .settings-item-input`);
-    if (el) { el.focus(); }
-  }, 80);
-}
-function removeAppart(i) {
-  if (editApparts.length <= 1) { showToast('Il faut au moins 1 appartement'); return; }
-  editApparts.splice(i, 1);
-  renderAppartsList();
+  setTimeout(()=>{ const el=document.querySelector(`#edit-ap-${editApparts.length-1} .settings-item-input`); if(el) el.focus(); },80);
 }
 function addProduit() {
   editProduits.push('');
   renderProduitsList();
-  setTimeout(()=>{
-    const idx = editProduits.length - 1;
-    const el = document.querySelector(`#edit-pr-${idx} .settings-item-input`);
-    if (el) { el.focus(); }
-  }, 80);
+  setTimeout(()=>{ const el=document.querySelector(`#edit-pr-${editProduits.length-1} .settings-item-input`); if(el) el.focus(); },80);
 }
-function removeProduit(i) {
-  if (editProduits.length <= 1) { showToast('Il faut au moins 1 produit'); return; }
-  editProduits.splice(i, 1);
-  renderProduitsList();
+
+function saveSettings() {
+  if (editApparts.some(a=>!a.name.trim()))  { showToast("Un appartement n'a pas de nom"); return; }
+  if (editProduits.some(p=>!p.trim()))      { showToast("Un produit n'a pas de nom"); return; }
+
+  const removedApparts  = apparts.filter(a=>!editApparts.find(ea=>ea.id===a.id)).map(a=>a.id);
+  const removedProduits = produits.filter(p=>!editProduits.includes(p));
+
+  for (const id of removedApparts) { delete besoins[id]; delete timestamps[id]; }
+  for (const rp of removedProduits) {
+    delete stockC[rp];
+    for (const ap of editApparts) { if(besoins[ap.id]) delete besoins[ap.id][rp]; }
+  }
+  apparts  = editApparts.map(a=>({...a, name:a.name.trim()}));
+  produits = editProduits.map(p=>p.trim());
+  syncAll();
+
+  save(KEY_APPARTS,    apparts);
+  save(KEY_PRODUITS,   produits);
+  save(KEY_BESOINS,    besoins);
+  save(KEY_STOCK,      stockC);
+  save(KEY_TIMESTAMPS, timestamps);
+
+  editApparts = []; editProduits = [];
+  showToast('✅ Modifications enregistrées !');
+  setTimeout(()=>showBesoins(), 900);
 }
 
 // ── DRAG & DROP ───────────────────────────────────────────────────────────────
-let dragSrc = null;
-
 function addDragEvents(el, type) {
-  // Desktop drag
   el.addEventListener('dragstart', e => {
     dragSrc = el;
     setTimeout(() => el.classList.add('dragging'), 0);
@@ -957,89 +862,44 @@ function addDragEvents(el, type) {
   });
   el.addEventListener('dragend', () => {
     el.classList.remove('dragging');
-    document.querySelectorAll('.settings-item').forEach(i => i.classList.remove('drag-over'));
+    document.querySelectorAll('.settings-item').forEach(i=>i.classList.remove('drag-over'));
     dragSrc = null;
   });
   el.addEventListener('dragover', e => {
     e.preventDefault();
-    if (dragSrc && dragSrc !== el && dragSrc.dataset.type === type) {
-      document.querySelectorAll('.settings-item').forEach(i => i.classList.remove('drag-over'));
+    if (dragSrc && dragSrc!==el && dragSrc.dataset.type===type) {
+      document.querySelectorAll('.settings-item').forEach(i=>i.classList.remove('drag-over'));
       el.classList.add('drag-over');
     }
   });
   el.addEventListener('drop', e => {
     e.preventDefault();
-    if (!dragSrc || dragSrc === el || dragSrc.dataset.type !== type) return;
-    const from = parseInt(dragSrc.dataset.index);
-    const to   = parseInt(el.dataset.index);
-    if (type === 'appart') {
-      const [item] = editApparts.splice(from, 1);
-      editApparts.splice(to, 0, item);
-      renderAppartsList();
-    } else {
-      const [item] = editProduits.splice(from, 1);
-      editProduits.splice(to, 0, item);
-      renderProduitsList();
-    }
+    if (!dragSrc||dragSrc===el||dragSrc.dataset.type!==type) return;
+    const from=parseInt(dragSrc.dataset.index), to=parseInt(el.dataset.index);
+    if (type==='appart') { const [x]=editApparts.splice(from,1); editApparts.splice(to,0,x); renderAppartsList(); }
+    else                 { const [x]=editProduits.splice(from,1); editProduits.splice(to,0,x); renderProduitsList(); }
   });
-
-  // Mobile touch drag
-  let touchStartY = 0;
-  el.addEventListener('touchstart', e => {
-    touchStartY = e.touches[0].clientY;
-    el.classList.add('dragging');
-  }, { passive: true });
-  el.addEventListener('touchmove', e => {
+  // Touch
+  el.addEventListener('touchstart', e=>{dragSrc=el;el.classList.add('dragging');},{passive:true});
+  el.addEventListener('touchmove', e=>{
     e.preventDefault();
-    const touch = e.touches[0];
-    const target = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.settings-item');
-    document.querySelectorAll('.settings-item').forEach(i => i.classList.remove('drag-over'));
-    if (target && target !== el && target.dataset.type === type) target.classList.add('drag-over');
-  }, { passive: false });
-  el.addEventListener('touchend', e => {
+    const t=e.touches[0], target=document.elementFromPoint(t.clientX,t.clientY)?.closest('.settings-item');
+    document.querySelectorAll('.settings-item').forEach(i=>i.classList.remove('drag-over'));
+    if(target&&target!==el&&target.dataset.type===type) target.classList.add('drag-over');
+  },{passive:false});
+  el.addEventListener('touchend', e=>{
     el.classList.remove('dragging');
-    const touch = e.changedTouches[0];
-    const target = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.settings-item');
-    document.querySelectorAll('.settings-item').forEach(i => i.classList.remove('drag-over'));
-    if (target && target !== el && target.dataset.type === type) {
-      const from = parseInt(el.dataset.index);
-      const to   = parseInt(target.dataset.index);
-      if (type === 'appart') {
-        const [item] = editApparts.splice(from, 1);
-        editApparts.splice(to, 0, item);
-        renderAppartsList();
-      } else {
-        const [item] = editProduits.splice(from, 1);
-        editProduits.splice(to, 0, item);
-        renderProduitsList();
-      }
+    const t=e.changedTouches[0], target=document.elementFromPoint(t.clientX,t.clientY)?.closest('.settings-item');
+    document.querySelectorAll('.settings-item').forEach(i=>i.classList.remove('drag-over'));
+    if(target&&target!==el&&target.dataset.type===type){
+      const from=parseInt(el.dataset.index), to=parseInt(target.dataset.index);
+      if(type==='appart'){const[x]=editApparts.splice(from,1);editApparts.splice(to,0,x);renderAppartsList();}
+      else{const[x]=editProduits.splice(from,1);editProduits.splice(to,0,x);renderProduitsList();}
     }
   });
 }
 
-function saveSettings() {
-  if (editApparts.some(a=>!a.name.trim()))  { showToast("Un appartement n'a pas de nom"); return; }
-  if (editProduits.some(p=>!p.trim()))      { showToast("Un produit n'a pas de nom"); return; }
-  const removedApparts  = apparts.filter(a=>!editApparts.find(ea=>ea.id===a.id)).map(a=>a.id);
-  const removedProduits = produits.filter(p=>!editProduits.includes(p));
-  for (const id of removedApparts) { delete besoins[id]; delete livres[id]; }
-  for (const ap of editApparts) {
-    if (!besoins[ap.id]) besoins[ap.id]={};
-    for (const rp of removedProduits) { delete besoins[ap.id][rp]; delete achetes[rp+':'+ap.id]; }
-    for (const p of editProduits) if (besoins[ap.id][p]===undefined) besoins[ap.id][p]=0;
-  }
-  apparts  = editApparts.map(a=>({...a,name:a.name.trim()}));
-  produits = editProduits.map(p=>p.trim());
-  save(KEY_APPARTS,  apparts);
-  save(KEY_PRODUITS, produits);
-  save(KEY_BESOINS,  besoins);
-  save(KEY_ACHETES,  achetes);
-  save(KEY_LIVRES,   livres);
-  showToast('✅ Modifications enregistrées !');
-  setTimeout(()=>showHome(), 900);
-}
-
-// ── EMOJI PICKER ──────────────────────────────────────────────────────────────
+// ── EMOJI ─────────────────────────────────────────────────────────────────────
 function openEmojiPicker(idx) {
   emojiTarget = idx;
   const grid = document.getElementById('emoji-grid');
@@ -1058,22 +918,21 @@ function pickEmoji(emoji) {
     const el=document.querySelector(`#edit-ap-${emojiTarget} .settings-item-emoji`);
     if(el) el.textContent=emoji;
   }
-  document.getElementById('emoji-modal').classList.remove('open');
-  emojiTarget=null;
+  document.getElementById('emoji-modal').classList.remove('open'); emojiTarget=null;
 }
 function closeEmojiPicker(e) {
-  if (e.target===document.getElementById('emoji-modal')) {
+  if(e.target===document.getElementById('emoji-modal')){
     document.getElementById('emoji-modal').classList.remove('open'); emojiTarget=null;
   }
 }
 
 // ── EXPORT / IMPORT ───────────────────────────────────────────────────────────
 function exportData() {
-  const data = { version:3, exportedAt:new Date().toISOString(), apparts, produits, besoins, achetes, livres };
+  const data = { version:4, exportedAt:new Date().toISOString(), apparts, produits, besoins, stock:stockC, timestamps };
   const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
-  a.href=url; a.download=`courses-airbnb-${new Date().toLocaleDateString('fr-FR').replace(/\//g,'-')}.json`;
+  a.href=url; a.download=`restock-bnb-${new Date().toLocaleDateString('fr-FR').replace(/\//g,'-')}.json`;
   a.click(); URL.revokeObjectURL(url);
   showToast('📤 Export téléchargé !');
 }
@@ -1083,15 +942,15 @@ function importData(event) {
   reader.onload=(e)=>{
     try {
       const data=JSON.parse(e.target.result);
-      if(!data.apparts||!data.produits) { showToast('❌ Fichier invalide'); return; }
+      if(!data.apparts||!data.produits){showToast('❌ Fichier invalide');return;}
       if(!confirm(`Importer les données du ${new Date(data.exportedAt).toLocaleString('fr-FR')} ?\nTes données actuelles seront remplacées.`)) return;
       apparts=data.apparts; produits=data.produits;
-      besoins=data.besoins||{}; achetes=data.achetes||{}; livres=data.livres||{};
+      besoins=data.besoins||{}; stockC=data.stock||{}; timestamps=data.timestamps||{};
       save(KEY_APPARTS,apparts); save(KEY_PRODUITS,produits);
-      save(KEY_BESOINS,besoins); save(KEY_ACHETES,achetes); save(KEY_LIVRES,livres);
+      save(KEY_BESOINS,besoins); save(KEY_STOCK,stockC); save(KEY_TIMESTAMPS,timestamps);
       showToast('📥 Données importées !');
-      setTimeout(()=>showHome(),900);
-    } catch(err) { showToast('❌ Fichier illisible'); }
+      setTimeout(()=>showBesoins(),900);
+    } catch(err){showToast('❌ Fichier illisible');}
   };
   reader.readAsText(file); event.target.value='';
 }
@@ -1106,7 +965,7 @@ function showToast(msg) {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-renderHome(); updateBadges();
+renderBesoinsHome(); updateBadge();
 </script>
 </body>
 </html>
