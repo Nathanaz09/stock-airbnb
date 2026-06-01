@@ -152,6 +152,15 @@
   }
   .empty-state .empty-icon { font-size: 3rem; margin-bottom: 12px; }
 
+  .livrer-btn-sm {
+    padding: 8px 14px; border-radius: 20px; border: none; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-size: .85rem; font-weight: 600;
+    background: #e0f5eb; color: var(--green); flex-shrink: 0; transition: transform .1s, opacity .2s;
+    white-space: nowrap;
+  }
+  .livrer-btn-sm:active { transform: scale(.93); }
+  .livrer-btn-sm.disabled { background: #f0ebe4; color: var(--muted); cursor: default; }
+
   /* SETTINGS */
   .settings-section { margin-bottom: 28px; }
   .settings-section-title {
@@ -271,16 +280,26 @@
   </div>
 </div>
 
-<!-- À ACHETER -->
-<div class="screen" id="screen-acheter">
+<!-- LIVRAISON HOME -->
+<div class="screen" id="screen-livraison">
   <div class="page-wrap">
-    <p class="page-title">À acheter</p>
-    <p class="page-sub" id="acheter-sub"></p>
-    <div class="tab-switcher">
-      <button class="tab-btn active" id="tab-produit" onclick="switchTab('produit')">Par produit</button>
-      <button class="tab-btn" id="tab-appart" onclick="switchTab('appart')">Par appartement</button>
+    <p class="page-title">Livraison</p>
+    <p class="page-sub">Sélectionne un appartement à recharger</p>
+    <div class="appart-grid" id="livraison-grid"></div>
+  </div>
+</div>
+
+<!-- LIVRAISON DETAIL -->
+<div class="screen" id="screen-livraison-detail">
+  <div class="page-wrap">
+    <div class="detail-header">
+      <div class="detail-icon" id="ld-icon"></div>
+      <div class="detail-info">
+        <h2 id="ld-title"></h2>
+        <p id="ld-sub"></p>
+      </div>
     </div>
-    <div id="acheter-content"></div>
+    <div class="card-list" id="ld-list"></div>
   </div>
 </div>
 
@@ -332,9 +351,9 @@
   <button class="nav-btn" id="nav-stock" onclick="showStock()">
     <span class="nav-icon">📦</span><span>Stock</span>
   </button>
-  <button class="nav-btn" id="nav-acheter" onclick="showAcheter()">
-    <span class="nav-badge" id="badge-acheter"></span>
-    <span class="nav-icon">🛒</span><span>À acheter</span>
+  <button class="nav-btn" id="nav-livraison" onclick="showLivraison()">
+    <span class="nav-badge" id="badge-livraison"></span>
+    <span class="nav-icon">🚚</span><span>Livraison</span>
   </button>
   <button class="nav-btn" id="nav-settings" onclick="showSettings()">
     <span class="nav-icon">⚙️</span><span>Réglages</span>
@@ -392,7 +411,8 @@ function syncAll() {
 }
 syncAll();
 
-let currentAppart  = null;
+let currentAppart   = null;
+let currentLivAppart = null;
 let currentTab     = 'produit';
 let editApparts    = [], editProduits = [], emojiTarget = null;
 let dragSrc        = null;
@@ -426,24 +446,25 @@ function qtyAcheter(produit) {
 
 // ── NAV ───────────────────────────────────────────────────────────────────────
 function setNav(active) {
-  ['besoins','stock','acheter','settings'].forEach(id =>
+  ['besoins','stock','livraison','settings'].forEach(id =>
     document.getElementById('nav-'+id).classList.toggle('active', id===active));
 }
 
 function hideAll() {
-  ['besoins','besoin-detail','stock','acheter','settings'].forEach(id =>
+  ['besoins','besoin-detail','stock','livraison','livraison-detail','settings'].forEach(id =>
     document.getElementById('screen-'+id).classList.remove('active'));
   document.getElementById('back-btn').classList.remove('visible');
 }
 
 document.getElementById('back-btn').onclick = function() {
   if (currentAppart) { currentAppart = null; showBesoins(); }
+  else if (currentLivAppart) { currentLivAppart = null; showLivraison(); }
   else showBesoins();
 };
 
 function updateBadge() {
   const total = produits.filter(p => qtyAcheter(p) > 0).length;
-  const b = document.getElementById('badge-acheter');
+  const b = document.getElementById('badge-livraison');
   b.textContent = total;
   b.classList.toggle('visible', total > 0);
 }
@@ -624,134 +645,143 @@ function updateStock(produit, delta) {
   updateBadge();
 }
 
-// ── À ACHETER ─────────────────────────────────────────────────────────────────
-function showAcheter() {
+// ── LIVRAISON ────────────────────────────────────────────────────────────────
+
+function showLivraison() {
   editApparts = []; editProduits = [];
+  currentLivAppart = null;
   hideAll();
-  document.getElementById('screen-acheter').classList.add('active');
-  document.getElementById('header-title').textContent = '🛒 À acheter';
-  setNav('acheter'); renderAcheter(); updateBadge();
+  document.getElementById('screen-livraison').classList.add('active');
+  document.getElementById('header-title').textContent = '🚚 Livraison';
+  document.getElementById('back-btn').classList.remove('visible');
+  setNav('livraison'); renderLivraisonHome(); updateBadge();
 }
 
-function switchTab(tab) {
-  currentTab = tab;
-  document.getElementById('tab-produit').classList.toggle('active', tab==='produit');
-  document.getElementById('tab-appart').classList.toggle('active', tab==='appart');
-  renderAcheter();
+function renderLivraisonHome() {
+  const grid = document.getElementById('livraison-grid');
+  grid.innerHTML = '';
+  for (const ap of apparts) {
+    const b = besoins[ap.id] || {};
+    const nbBesoin = produits.filter(p => b[p] > 0).length;
+    const totalQty = produits.reduce((s,p) => s+(b[p]||0), 0);
+    const stockOk  = produits.filter(p => b[p] > 0 && (stockC[p]||0) >= b[p]).length;
+    const card = document.createElement('div');
+    card.className = 'appart-card';
+    card.innerHTML = `
+      <span class="appart-icon">${ap.emoji}</span>
+      <div class="appart-name">${ap.name}</div>
+      ${nbBesoin > 0
+        ? `<div class="appart-need">🔴 ${nbBesoin} produit${nbBesoin>1?'s':''} manquant${nbBesoin>1?'s':''}</div>
+           <div class="appart-meta" style="color:var(--green);margin-top:2px;">✓ ${stockOk} couverts par le stock</div>`
+        : `<div class="appart-ok">✓ Rien ne manque</div>`}`;
+    card.onclick = () => showLivraisonDetail(ap.id);
+    grid.appendChild(card);
+  }
 }
 
-function renderAcheter() {
-  const content = document.getElementById('acheter-content');
-  content.innerHTML = '';
+function showLivraisonDetail(appartId) {
+  const ap = apparts.find(a => a.id === appartId); if (!ap) return;
+  currentLivAppart = appartId;
+  hideAll();
+  document.getElementById('screen-livraison-detail').classList.add('active');
+  document.getElementById('back-btn').classList.add('visible');
+  document.getElementById('header-title').textContent = ap.name;
+  document.getElementById('ld-icon').textContent = ap.emoji;
+  document.getElementById('ld-title').textContent = ap.name;
+  setNav('livraison'); renderLivraisonDetail(appartId);
+}
 
-  const toShop = produits.filter(p => qtyAcheter(p) > 0);
-  const ok     = produits.filter(p => qtyAcheter(p) === 0 && totalBesoin(p) > 0);
+function renderLivraisonDetail(appartId) {
+  const b    = besoins[appartId] || {};
+  const list = document.getElementById('ld-list');
+  list.innerHTML = '';
 
-  const totalItems = toShop.length;
-  const totalUnits = toShop.reduce((s,p) => s+qtyAcheter(p), 0);
-  document.getElementById('acheter-sub').textContent =
-    totalItems > 0
-      ? `${totalItems} produit${totalItems>1?'s':''} à acheter · ${totalUnits} unité${totalUnits>1?'s':''}`
-      : 'Tout est couvert par le stock 🎉';
+  const prodsBesoin = produits.filter(p => b[p] > 0);
 
-  if (totalBesoin(produits[0]) === 0 && produits.every(p => totalBesoin(p) === 0)) {
-    content.innerHTML = `<div class="empty-state">
-      <div class="empty-icon">✅</div>
-      <p>Aucun besoin enregistré.<br>Va dans Besoins pour indiquer ce qui manque.</p>
-    </div>`;
+  if (prodsBesoin.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><p>Rien à livrer dans cet appartement.</p></div>`;
+    document.getElementById('ld-sub').textContent = 'Rien à livrer';
     return;
   }
 
-  if (currentTab === 'produit') {
-    renderAcheterParProduit(content, toShop, ok);
+  document.getElementById('ld-sub').textContent = `${prodsBesoin.length} produit${prodsBesoin.length>1?'s':''} à livrer`;
+
+  for (const p of prodsBesoin) {
+    const besoin = b[p] || 0;
+    const stock  = stockC[p] || 0;
+    const dispo  = Math.min(besoin, stock);
+    const manque = besoin - dispo;
+    const ps     = p.replace(/'/g,"\'");
+    const el     = document.createElement('div');
+    el.className = 'qty-row';
+    el.id        = `ld-row-${safeid(p)}`;
+    el.innerHTML = `
+      <div style="flex:1;">
+        <div class="qty-row-name">${p}</div>
+        <div class="qty-row-sub">
+          Besoin: <b>${besoin}</b> · Stock: <b style="color:${stock>=besoin?'var(--green)':'var(--accent)'}">${stock}</b>
+          ${manque > 0 ? ` · <span style="color:var(--accent)">⚠️ ${manque} manquant${manque>1?'s':''}</span>` : ''}
+        </div>
+      </div>
+      <div class="qty-controls">
+        <button class="qty-btn btn-minus" onclick="livrerQty('${appartId}','${ps}',-1)">−</button>
+        <span class="qty-val ${besoin===0?'zero':'has'}" id="ld-qty-${safeid(p)}">${besoin}</span>
+        <button class="qty-btn btn-plus"  onclick="livrerQty('${appartId}','${ps}',+1)">+</button>
+      </div>`;
+    list.appendChild(el);
+  }
+}
+
+function livrerQty(appartId, produit, delta) {
+  const besoin = besoins[appartId]?.[produit] || 0;
+  const stock  = stockC[produit] || 0;
+
+  if (delta === -1) {
+    // Livrer 1 : besoin -1, stock -1
+    if (besoin === 0) { showToast('Besoin déjà à 0 !'); return; }
+    if (stock === 0)  { showToast('Stock vide !'); return; }
+    besoins[appartId][produit] = besoin - 1;
+    stockC[produit] = stock - 1;
   } else {
-    renderAcheterParAppart(content);
+    // Annuler 1 livraison : besoin +1, stock +1
+    besoins[appartId][produit] = besoin + 1;
+    stockC[produit] = stock + 1;
   }
+
+  timestamps[appartId] = new Date().toISOString();
+  save(KEY_BESOINS, besoins);
+  save(KEY_STOCK, stockC);
+  save(KEY_TIMESTAMPS, timestamps);
+
+  const newBesoin = besoins[appartId][produit];
+  const newStock  = stockC[produit];
+
+  // Update qty display
+  const qEl = document.getElementById(`ld-qty-${safeid(produit)}`);
+  if (qEl) {
+    qEl.textContent = newBesoin;
+    qEl.className = 'qty-val ' + (newBesoin===0?'zero':'has');
+    qEl.style.transform = 'scale(1.4)';
+    setTimeout(() => qEl.style.transform = '', 150);
+  }
+  // Update sub
+  const row = document.getElementById(`ld-row-${safeid(produit)}`);
+  if (row) {
+    const sub = row.querySelector('.qty-row-sub');
+    const manque = Math.max(0, newBesoin - newStock);
+    sub.innerHTML = `Besoin: <b>${newBesoin}</b> · Stock: <b style="color:${newStock>=newBesoin?'var(--green)':'var(--accent)'}">${newStock}</b>${manque>0?` · <span style="color:var(--accent)">⚠️ ${manque} manquant${manque>1?'s':''}</span>`:''}`;
+  }
+  refreshLdSub(appartId);
+  updateBadge();
 }
 
-function renderAcheterParProduit(container, toShop, ok) {
-  if (toShop.length > 0) {
-    const title = document.createElement('div');
-    title.className = 'acheter-section-title';
-    title.textContent = `À acheter (${toShop.length})`;
-    container.appendChild(title);
-    for (const p of toShop) {
-      const qty    = qtyAcheter(p);
-      const besoin = totalBesoin(p);
-      const stock  = stockC[p] || 0;
-      const detail = apparts
-        .filter(ap => (besoins[ap.id]?.[p]||0) > 0)
-        .map(ap => `${ap.name}: ${besoins[ap.id][p]}`)
-        .join(' · ');
-      const el = document.createElement('div');
-      el.className = 'acheter-item';
-      el.innerHTML = `
-        <div style="flex:1;">
-          <div class="acheter-item-name">${p}</div>
-          <div class="acheter-item-detail">Besoin: ${besoin} · Stock: ${stock} · ${detail}</div>
-        </div>
-        <span class="acheter-badge badge-buy">× ${qty}</span>`;
-      container.appendChild(el);
-    }
-  }
-
-  if (ok.length > 0) {
-    const title2 = document.createElement('div');
-    title2.className = 'acheter-section-title';
-    title2.textContent = `Couvert par le stock (${ok.length})`;
-    container.appendChild(title2);
-    for (const p of ok) {
-      const besoin = totalBesoin(p);
-      const stock  = stockC[p] || 0;
-      const el = document.createElement('div');
-      el.className = 'acheter-item';
-      el.style.opacity = '.6';
-      el.innerHTML = `
-        <div style="flex:1;">
-          <div class="acheter-item-name">${p}</div>
-          <div class="acheter-item-detail">Besoin: ${besoin} · Stock: ${stock}</div>
-        </div>
-        <span class="acheter-badge badge-ok">✓</span>`;
-      container.appendChild(el);
-    }
-  }
-}
-
-function renderAcheterParAppart(container) {
-  for (const ap of apparts) {
-    const b = besoins[ap.id] || {};
-    const lines = produits.filter(p => b[p] > 0);
-    if (lines.length === 0) continue;
-
-    const title = document.createElement('div');
-    title.className = 'acheter-section-title';
-    title.textContent = `${ap.emoji} ${ap.name}`;
-    container.appendChild(title);
-
-    for (const p of lines) {
-      const besoin = b[p] || 0;
-      const stock  = stockC[p] || 0;
-      // Portion du stock allouée à cet appart (proportionnelle)
-      const totalB = totalBesoin(p);
-      const stockPart = totalB > 0 ? Math.min(besoin, Math.round((besoin / totalB) * stock)) : 0;
-      const toShop = Math.max(0, besoin - stockPart);
-      const el = document.createElement('div');
-      el.className = 'acheter-item';
-      el.innerHTML = `
-        <div style="flex:1;">
-          <div class="acheter-item-name">${p}</div>
-          <div class="acheter-item-detail">Besoin: ${besoin} · Stock alloué: ${stockPart}</div>
-        </div>
-        <span class="acheter-badge ${toShop>0?'badge-buy':'badge-ok'}">${toShop>0?'× '+toShop:'✓'}</span>`;
-      container.appendChild(el);
-    }
-  }
-
-  if (document.getElementById('acheter-content').children.length === 0) {
-    container.innerHTML = `<div class="empty-state">
-      <div class="empty-icon">✅</div><p>Rien à acheter !</p>
-    </div>`;
-  }
+function refreshLdSub(appartId) {
+  const b = besoins[appartId]||{};
+  const remaining = produits.filter(p => b[p] > 0).length;
+  const sub = document.getElementById('ld-sub');
+  if (sub) sub.textContent = remaining > 0
+    ? `${remaining} produit${remaining>1?'s':''} à livrer`
+    : 'Tout livré ! ✅';
 }
 
 // ── SETTINGS ──────────────────────────────────────────────────────────────────
